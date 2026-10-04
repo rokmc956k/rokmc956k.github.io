@@ -117,6 +117,30 @@
   }
   if (searchInput) searchInput.addEventListener('input', (event) => renderSearch(event.target.value));
 
+  document.querySelectorAll('[data-category-move-select]').forEach((select) => {
+    select.addEventListener('change', () => {
+      const destination = select.value;
+      if (!destination) return;
+
+      const postUrl = select.dataset.postUrl || window.location.pathname;
+      const postTitle = select.dataset.postTitle || document.title;
+      const message = pageLang === 'ko'
+        ? `이 포스트를 “${destination}” 폴더로 이동하는 GitHub 변경 요청을 열까요?`
+        : `Open a GitHub request to move this post to “${destination}”?`;
+
+      if (!window.confirm(message)) {
+        select.value = '';
+        return;
+      }
+
+      const issueTitle = `[Category Move] ${postTitle}`;
+      const issueBody = `post_url: ${postUrl}\ncategory: ${destination}\n\nRequested from the post category dropdown.`;
+      const issueUrl = `https://github.com/rokmc956k/rokmc956k.github.io/issues/new?title=${encodeURIComponent(issueTitle)}&body=${encodeURIComponent(issueBody)}`;
+      window.open(issueUrl, '_blank', 'noopener');
+      select.value = '';
+    });
+  });
+
   document.addEventListener('keydown', (event) => {
     if (event.key === 'Escape') {
       setDrawer(false);
