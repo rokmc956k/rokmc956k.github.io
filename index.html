@@ -1,0 +1,33 @@
+---
+layout: default
+title: Home
+---
+<section class="hero">
+  <p class="eyebrow">Robotics / Physical AI</p>
+  <h1>S. Lee</h1>
+  <p class="role">Robotics / Physical AI Engineer</p>
+  <p class="intro">I work on robot learning, vision-language-action models, reinforcement learning, humanoid robotics, manipulation, and sim-to-real.</p>
+  <p class="hero-links"><a href="https://github.com/rokmc956k">GitHub</a><span>·</span><a href="#posts">Posts</a></p>
+</section>
+
+<section id="posts" class="posts-section">
+  <div class="section-heading">
+    <h2>Posts</h2>
+    <span>{{ site.posts | size }} articles</span>
+  </div>
+
+  <div class="post-list">
+    {% for post in site.posts %}
+      <article class="post-row">
+        <time datetime="{{ post.date | date_to_xmlschema }}">{{ post.date | date: "%b %d, %Y" }}</time>
+        <div class="post-copy">
+          <h3><a href="{{ post.url | relative_url }}">{{ post.title }}</a></h3>
+          <p>{{ post.description | default: post.excerpt | strip_html | truncate: 180 }}</p>
+          <a class="read-more" href="{{ post.url | relative_url }}">Read more »</a>
+        </div>
+      </article>
+    {% else %}
+      <p class="empty-state">No posts yet.</p>
+    {% endfor %}
+  </div>
+</section>
