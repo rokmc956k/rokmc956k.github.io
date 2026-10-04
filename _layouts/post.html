@@ -8,7 +8,7 @@ layout: default
 </style>
 
 <div class="post-toc-backdrop" data-toc-backdrop aria-hidden="true"></div>
-<aside class="post-toc-drawer" data-post-toc aria-hidden="true" aria-label="{% if page_lang == 'ko' %}목차{% else %}Contents{% endif %}">
+<aside class="post-toc-drawer" id="post-contents-panel" data-post-toc aria-hidden="true" aria-label="{% if page_lang == 'ko' %}목차{% else %}Contents{% endif %}">
   <div class="post-toc-header">
     <strong>{% if page_lang == 'ko' %}목차{% else %}Contents{% endif %}</strong>
     <button class="post-toc-close" type="button" data-toc-close aria-label="{% if page_lang == 'ko' %}목차 닫기{% else %}Close contents{% endif %}">×</button>
@@ -28,7 +28,7 @@ layout: default
       </div>
 
       <div class="post-category-control">
-        <button class="post-contents-button" type="button" data-toc-open aria-label="{% if page_lang == 'ko' %}목차 열기{% else %}Open contents{% endif %}">
+        <button class="post-contents-button" type="button" data-toc-open aria-controls="post-contents-panel" aria-expanded="false" aria-label="{% if page_lang == 'ko' %}목차 열기{% else %}Open contents{% endif %}">
           <span class="post-contents-icon" aria-hidden="true">☷</span>
           <span>{% if page_lang == 'ko' %}목차{% else %}Contents{% endif %}</span>
         </button>
