@@ -15,27 +15,83 @@ Copyable source skeleton:
 
 - `_templates/paper-review-post.html`
 
-The template is based on the structure and presentation patterns established by the InterEvolve and decMHT reviews. It should be treated as the default starting point for every new Paper Review.
+The template is based on the presentation patterns established by the InterEvolve and decMHT reviews and is extended with a critical-review framework that explicitly separates **author claims** from **experimental evidence, reproducibility, and result validity**. Treat it as the default starting point for every new Paper Review.
 
 ### Default article structure
 
 Use this order unless the paper genuinely requires a different sequence:
 
-1. Opening summary: problem, core idea, why it matters
-2. Core-idea callout
+1. Bibliographic information
+2. One-paragraph summary + core idea
 3. Optional KPI snapshot
-4. Problem and motivation
-5. Core abstraction / architecture
-6. Mathematical formulation
-7. Training / optimization / system pipeline
-8. Experiments and results
-9. Generalization / ablation / scaling
-10. Why this paper matters
-11. Limitations and open questions
-12. Takeaways
-13. References
+4. Research problem
+5. Claimed contributions
+6. Method
+   - Architecture / core abstraction
+   - Inputs / outputs
+   - Objective functions / reward / optimization target
+   - Dataset and training
+   - Inference procedure
+7. Experiments and results
+8. Generalization / ablation / scaling
+9. Critical review
+   - Strengths
+   - Weaknesses
+   - Hidden assumptions
+10. Reproducibility assessment
+11. Result validity
+12. Why this paper matters
+13. Engineering takeaways
+14. Experiments to reproduce
+15. Related papers
+16. Final verdict
+17. References
 
 H2 and H3 headings should be descriptive because the shared Contents panel automatically uses them for navigation.
+
+## Claim vs. evidence rule
+
+Every Paper Review must visibly distinguish these three layers:
+
+1. **Author claim** — what the paper says it contributes.
+2. **Reported evidence** — what experiments, code, datasets, checkpoints, or hardware results actually demonstrate.
+3. **Reviewer interpretation** — what we infer or recommend based on that evidence.
+
+Do not silently promote an author claim into an established fact. If the available source material does not support a stronger conclusion, state the uncertainty explicitly.
+
+## Reproducibility assessment
+
+Every substantive Paper Review should evaluate, where applicable:
+
+- Code completeness
+- Checkpoint availability
+- Dataset availability and license
+- Hyperparameter completeness
+- Hardware / compute cost
+- Missing implementation details that may block reproduction
+
+Use `Good / Partial / Missing`, `Available / Restricted / Missing`, or similarly explicit labels rather than vague prose when possible.
+
+## Result validity assessment
+
+Every Paper Review should check:
+
+- Fairness of baseline comparisons
+- Sample count, variance, confidence intervals, or statistical significance where relevant
+- Simulation vs. real-hardware evidence
+- Whether the benchmark is public/standard or internally constructed
+- Whether the reported metric actually represents task success or deployment usefulness
+- Whether each major claimed contribution is strongly supported, partially supported, or still speculative
+
+## Final verdict
+
+End the analytical portion with a compact verdict containing:
+
+- **Impact:** High / Medium / Low + rationale
+- **Confidence:** High / Medium / Low + confidence in the evidence
+- **Usefulness for current work:** High / Medium / Low + concrete relevance
+
+Then add a short **Bottom line** paragraph stating what the paper convincingly establishes and what remains unproven.
 
 ## Mandatory paper-review header
 
@@ -95,13 +151,16 @@ If an arXiv HTML version does not exist, do not invent one; omit that button and
 ## Content and writing rules
 
 - Start with the paper's thesis, not with notation or implementation detail.
+- Include bibliographic information when it materially helps trace the source, venue, code, data, or license.
 - Use equations only when they explain the method; define symbols and explain why each equation matters.
 - Prefer reconstructed architecture/data-flow diagrams when they improve clarity.
 - Surface only the most decision-relevant experimental numbers rather than reproducing every table.
-- Separate reported facts from interpretation.
+- Separate reported facts, author claims, and reviewer interpretation.
 - Attribute external figures, tables, and reported values clearly.
-- Always include a limitations/open-questions section.
-- End with a concise takeaway section and References.
+- Explicitly list hidden assumptions that affect generalization or deployment.
+- Include reproducibility and result-validity checks for substantive reviews.
+- Include practical engineering takeaways and specific experiments worth reproducing.
+- End with a final verdict and References.
 
 Reusable visual components are defined globally in `assets/css/post-typography.css`:
 
@@ -125,7 +184,7 @@ The middle label should be a short technical domain rather than the paper title.
 
 ## Bilingual rule
 
-The English and Korean versions of the same research post must expose the same topic, year, and source URLs. They should also follow the same section structure and preserve the same key equations, result tables, figures/diagrams, and references where applicable.
+The English and Korean versions of the same research post must expose the same topic, year, and source URLs. They should also follow the same section structure and preserve the same key equations, result tables, figures/diagrams, critical assessments, and references where applicable.
 
 The visible source labels remain standardized as:
 
