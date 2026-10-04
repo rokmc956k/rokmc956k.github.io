@@ -1,0 +1,144 @@
+---
+layout: post
+title: "InterEvolve: 테스트타임 Reward Program 진화로 휴머노이드 행동 확장"
+description: "컨트롤러는 고정한 채 LLM과 CMA-ES로 multi-stage reward program을 진화시키는 InterEvolve의 핵심 이론, 수식, 구조와 실험 결과 정리."
+date: 2026-10-03 23:21:00 -0400
+lang: ko
+permalink: /ko/posts/interevolve-test-time-reward-program-evolution/
+categories:
+  - Humanoid Robotics
+  - Reinforcement Learning
+tags:
+  - InterEvolve
+  - Humanoid
+  - Loco-Manipulation
+  - Reward Design
+  - Forward-Backward Representation
+  - CMA-ES
+  - Test-Time Adaptation
+math: true
+---
+
+<style>
+  .post-page{max-width:900px}.paper-links{display:flex;flex-wrap:wrap;gap:10px;margin:22px 0 30px}.paper-links a{border:1px solid var(--line);border-radius:999px;padding:7px 12px;font-family:var(--sans);font-size:.86rem}.paper-figure{margin:34px 0}.paper-figure img{width:100%;border:1px solid var(--line);border-radius:10px;background:#fff;display:block}.paper-figure figcaption{margin-top:9px;color:var(--muted);font:0.84rem/1.5 var(--sans)}.note-box{border-left:3px solid var(--link);padding:14px 18px;margin:28px 0;background:var(--surface)}.table-wrap{overflow-x:auto;margin:24px 0 34px;border:1px solid var(--line);border-radius:9px}.table-wrap table{min-width:680px;margin:0}.table-wrap th{font-family:var(--sans);font-size:.8rem;color:var(--muted);background:var(--surface)}.table-wrap th,.table-wrap td{padding:10px 12px}.result-good{font-weight:700;color:var(--link)}.takeaways li{margin:.55em 0}@media(max-width:700px){.paper-links{gap:7px}.post-page{max-width:100%}}
+</style>
+
+<p class="eyebrow">논문 정리 · Humanoid Loco-Manipulation · 2026</p>
+
+<div class="paper-links">
+  <a href="https://sirui-xu.github.io/InterEvolve/" target="_blank" rel="noopener">Project page ↗</a>
+  <a href="https://arxiv.org/abs/2610.02196" target="_blank" rel="noopener">arXiv ↗</a>
+  <a href="https://arxiv.org/html/2610.02196v1" target="_blank" rel="noopener">HTML paper ↗</a>
+</div>
+
+<p><strong>InterEvolve</strong>는 새로운 humanoid loco-manipulation task가 들어왔을 때 policy를 다시 학습시키는 대신, <strong>task를 표현하는 reward program 자체를 test time에 진화</strong>시키는 방법이다. 이미 넓은 motor repertoire를 가진 behavioral foundation model이 있다면, 새로운 행동을 위해 policy weight를 바꾸는 대신 그 능력을 꺼내는 <em>task interface</em>를 바꾸자는 접근이다.</p>
+
+<figure class="paper-figure">
+  <img src="https://sirui-xu.github.io/InterEvolve/assets/hero/hero-wall-desktop.jpg" alt="InterEvolve humanoid manipulation scenes">
+  <figcaption>InterEvolve project overview. 하나의 frozen motor model이 서로 다른 reward program을 통해 다양한 object-centric loco-manipulation task를 수행한다. Source: InterEvolve project page.</figcaption>
+</figure>
+
+<div class="note-box"><strong>핵심:</strong> controller는 고정하고, LLM이 multi-stage reward program의 구조를 수정하고, CMA-ES가 숫자 파라미터를 튜닝한다. 실행 결과는 고정된 verifier가 평가하며 성공한 program은 skill library에 저장된다.</div>
+
+<h2>1. 왜 reward program인가?</h2>
+<p>motion reference나 단일 goal state는 접촉이 중요한 manipulation task를 표현하기에 부족한 경우가 많다. 예를 들어 box를 다른 면으로 세우기, 좁은 통로 사이로 밀기, 손을 쓰지 않고 발로 차기 같은 task는 단순한 최종 pose보다 <strong>중간 전략</strong>이 중요하다.</p>
+
+<p>InterEvolve는 task를 여러 stage로 분해하고 각 stage마다 reward와 종료 조건을 둔다.</p>
+
+<p>\[
+P = \left(\boldsymbol{\theta},\{(r_j,g_j)\}_{j=1}^{J}\right)
+\]</p>
+
+<p>여기서 $r_j$는 stage $j$의 reward function, $g_j$는 stage completion condition, $\boldsymbol{\theta}$는 weight, tolerance, kernel width, threshold 같은 tunable constants다. 예를 들어 접근 → 접촉 → 들어올림 → 이동 → 내려놓고 손 떼기 같은 sequence를 하나의 program으로 표현할 수 있다.</p>
+
+<h2>2. Forward–Backward behavioral foundation model</h2>
+<p>reward candidate가 바뀔 때마다 RL을 다시 학습하면 search 자체가 너무 비싸진다. InterEvolve는 이를 피하기 위해 forward–backward(FB) representation을 사용한다. latent $\boldsymbol z$가 behavior를 가리키고, forward map $F$와 backward map $B$가 discounted future-state occupancy를 factorize한다.</p>
+
+<p>\[
+M^{\pi_{\boldsymbol z}}(d\boldsymbol s'\mid \boldsymbol s,\boldsymbol a)
+\approx F(\boldsymbol s,\boldsymbol a,\boldsymbol z)^\top B(\boldsymbol s')\,\rho(d\boldsymbol s')
+\]</p>
+
+<p>새 reward $r$에 대한 action value는 다음처럼 latent projection으로 근사된다.</p>
+
+<p>\[
+Q_r^{\pi_{\boldsymbol z}}(\boldsymbol s,\boldsymbol a)
+\approx F(\boldsymbol s,\boldsymbol a,\boldsymbol z)^\top \widetilde{\boldsymbol z}_r,
+\qquad
+\widetilde{\boldsymbol z}_r = \mathbb E_{\rho}[r(\boldsymbol s')B(\boldsymbol s')]
+\]</p>
+
+<p>즉 <strong>reward를 바꿔도 policy를 재학습하지 않고 latent prompt만 다시 계산</strong>한다. 이것이 많은 reward program candidate를 빠르게 rollout해볼 수 있게 만든다.</p>
+
+<h3>Reward inference bank와 reward tilt</h3>
+<p>고정된 replay-state bank에서 stage reward를 평가해 latent prompt를 만들고, high-reward state에 더 집중하도록 reward tilt를 적용한다.</p>
+
+<p>\[
+\boldsymbol z_{j,t}=\operatorname{proj}\!\left(\sum_{n=1}^{N}\alpha_{j,n,t}B(\boldsymbol s_n)\right),
+\qquad
+\alpha_{j,n,t}\propto \hat r_{j,n,t}\exp(\beta\hat r_{j,n,t})
+\]</p>
+
+<p>특히 kicking처럼 pretraining distribution에서 드문 행동은 관련 state 자체가 적기 때문에 uniform averaging보다 이런 집중 메커니즘이 중요하다.</p>
+
+<h2>3. Object-aware residual: body prior는 유지하고 interaction만 확장</h2>
+<p>body-only model은 locomotion과 whole-body motion을 잘 표현해도 object state만 다른 task를 구분하기 어렵다. InterEvolve는 body prior를 freeze한 상태에서 object-conditioned residual branch를 추가한다.</p>
+
+<p>\[
+\boldsymbol\mu_{\pi}(\boldsymbol o_t,\boldsymbol z)=
+\tanh\!\left(\boldsymbol\mu_{\mathrm{prior}}(\boldsymbol o_t^{\mathrm{body}},\boldsymbol z)+\boldsymbol\Delta_{\mu}(\boldsymbol o_t,\boldsymbol z)\right)
+\]</p>
+
+<p>구조적으로는 residual policy learning과 유사하다. 넓은 motor prior는 보존하고, object position/orientation/velocity와 geometry를 이용하는 residual이 interaction competence만 추가한다.</p>
+
+<h2>4. 핵심 알고리즘: LLM outer loop + CMA-ES inner loop</h2>
+
+<figure class="paper-figure">
+  <img src="https://arxiv.org/html/2610.02196v1/method_overview.png" alt="InterEvolve method overview">
+  <figcaption>LLM은 reward program의 구조를 수정하고, CMA-ES는 continuous constants를 튜닝한다. frozen FB motor model이 candidate를 실행하고 fixed verifier가 결과를 평가한다. Source: InterEvolve paper.</figcaption>
+</figure>
+
+<ul class="takeaways">
+  <li><strong>LLM outer loop:</strong> stage 수, reward term, stage transition logic을 수정.</li>
+  <li><strong>CMA-ES inner loop:</strong> reward weight, threshold, tolerance 같은 숫자 파라미터를 탐색.</li>
+  <li><strong>Frozen execution:</strong> policy retraining 없이 reward → latent prompt → rollout.</li>
+  <li><strong>Fixed verifier:</strong> 최적화되는 reward와 독립된 성공 판정기로 reward hacking을 억제.</li>
+  <li><strong>Skill library:</strong> 성공한 program을 저장해 이후 task의 초기 구조나 component로 재사용.</li>
+</ul>
+
+<h2>5. Fixed verifier가 중요한 이유</h2>
+<p>reward search는 specification gaming에 취약하다. shaped reward는 높지만 실제 task는 실패하는 candidate가 생길 수 있다. InterEvolve는 행동 생성용 reward와 외부 task-success verifier를 분리한다. reward program은 바뀌어도 verifier는 바뀌지 않기 때문에 search가 실제 성공률을 향하도록 유도한다.</p>
+
+<h2>6. 주요 결과</h2>
+<div class="table-wrap">
+<table>
+<thead><tr><th>설정</th><th>Success rate</th><th>해석</th></tr></thead>
+<tbody>
+<tr><td>Fixed tuned reward program</td><td>34.6%</td><td>숫자 튜닝만으로는 한계가 큼</td></tr>
+<tr><td>Single-stage restriction</td><td>44.7%</td><td>복잡한 task에서 staged structure가 중요</td></tr>
+<tr><td><strong>Full InterEvolve</strong></td><td class="result-good"><strong>86.5%</strong></td><td>구조 진화 + numerical tuning + staged execution</td></tr>
+</tbody>
+</table>
+</div>
+
+<p>핵심 메시지는 controller 안에 이미 존재하는 motor competence와 실제 task success 사이의 차이가 상당 부분 <strong>task specification의 품질</strong>에서 생길 수 있다는 것이다.</p>
+
+<h2>7. Skill library와 composition</h2>
+<p>성공한 reward program은 reusable skill이 된다. 새로운 task를 시작할 때 기존 program을 seed로 사용하거나 stage structure를 가져오거나 여러 behavior를 조합할 수 있다. policy parameter는 그대로지만 시스템 수준의 repertoire는 계속 확장되는 셈이다.</p>
+
+<h2>8. 연구 관점에서의 해석</h2>
+<div class="note-box"><strong>중요한 관점:</strong> InterEvolve는 adaptation의 위치를 policy space에서 <em>task-specification space</em>로 옮긴다. 큰 pretrained robot controller가 이미 충분한 behavior support를 갖고 있다면, 수억 개 parameter를 다시 업데이트하기보다 compact reward program을 탐색하는 편이 훨씬 효율적일 수 있다.</div>
+
+<ul class="takeaways">
+  <li>controller 재학습 없이 test-time adaptation이 가능하다.</li>
+  <li>residual 구조로 body competence를 유지하면서 object interaction을 확장한다.</li>
+  <li>구조 탐색과 숫자 튜닝을 서로 다른 optimizer에 맡기는 분업이 효과적이다.</li>
+  <li>고정 verifier는 reward hacking 방지에 필수적이다.</li>
+  <li>한계는 pretrained motor model에 해당 행동의 support가 실제로 존재해야 한다는 점이다.</li>
+</ul>
+
+<h2>References</h2>
+<ul>
+  <li><a href="https://sirui-xu.github.io/InterEvolve/" target="_blank" rel="noopener">InterEvolve project page</a></li>
+  <li><a href="https://arxiv.org/abs/2610.02196" target="_blank" rel="noopener">InterEvolve, arXiv:2610.02196</a></li>
+</ul>
