@@ -1,0 +1,369 @@
+---
+layout: post
+title: "Physical Intelligence π 모델 Deep Research: π₀ → π₀.₅ → π₀.₆ / π*₀.₆"
+description: "Physical Intelligence의 π₀, π₀.₅, π₀.₆, π*₀.₆를 architecture, data recipe, flow matching, knowledge insulation, RECAP, open-source/reproducibility 관점에서 비교 분석합니다."
+date: 2026-10-04 15:35:00 -0400
+lang: ko
+permalink: /ko/posts/physical-intelligence-pi-series-deep-research/
+categories:
+  - Deep Research
+  - VLA
+tags:
+  - Physical Intelligence
+  - pi0
+  - pi0.5
+  - pi0.6
+  - RECAP
+  - VLA
+  - Flow Matching
+  - Robot Foundation Model
+math: true
+---
+
+<style>
+.pi-source-links{display:flex;flex-wrap:wrap;gap:8px;margin:12px 0 28px}.pi-source-links a{border:1px solid var(--line);border-radius:999px;padding:7px 11px;font:600 .78rem/1.2 var(--sans);color:var(--text)}.pi-source-links a:hover{border-color:var(--link);color:var(--link);text-decoration:none}.pi-meta{display:grid;grid-template-columns:160px 1fr;border:1px solid var(--line);border-radius:10px;overflow:hidden;margin:18px 0 28px}.pi-meta div{padding:9px 12px;border-bottom:1px solid var(--line)}.pi-meta div:nth-last-child(-n+2){border-bottom:0}.pi-meta .k{font:700 .78rem/1.4 var(--sans);color:var(--muted);background:var(--surface)}.pi-evolution{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;margin:22px 0 30px}.pi-stage{border:1px solid var(--line);border-radius:10px;padding:14px;background:var(--surface)}.pi-stage strong{display:block;font:750 1.15rem/1.1 var(--sans);margin-bottom:7px}.pi-stage span{display:block;color:var(--muted);font:.82rem/1.5 var(--sans)}.pi-stage .arrow{margin-top:8px;color:var(--link);font-weight:700}.evidence{display:inline-block;border:1px solid var(--line);border-radius:999px;padding:2px 7px;margin-right:5px;font:700 .68rem/1.3 var(--sans);color:var(--muted)}.e-paper{border-color:#5a7897}.e-official{border-color:#777}.e-company{border-color:#8a6d3b}.e-infer{border-style:dashed}.pi-figure{margin:28px 0}.pi-figure img{width:100%;height:auto;border:1px solid var(--line);border-radius:10px;background:#fff}.pi-figure figcaption{margin-top:8px;color:var(--muted);font:.8rem/1.5 var(--sans)}.pi-two{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin:20px 0}.pi-card{border:1px solid var(--line);border-radius:10px;padding:15px;background:var(--surface)}.pi-card h4{margin:.1rem 0 .45rem}.pi-card p:last-child{margin-bottom:0}.pi-matrix td:first-child,.pi-matrix th:first-child{white-space:nowrap}.pi-verdict{border:1px solid var(--line);border-radius:10px;padding:18px;margin:24px 0;background:var(--surface)}@media(max-width:760px){.pi-evolution{grid-template-columns:1fr 1fr}.pi-two{grid-template-columns:1fr}.pi-meta{grid-template-columns:120px 1fr}}@media(max-width:480px){.pi-evolution{grid-template-columns:1fr}}
+</style>
+
+<p class="eyebrow">Deep Research · VLA · Physical Intelligence · 2024–2026</p>
+
+<div class="pi-source-links">
+  <a href="https://www.pi.website/blog/pi0" target="_blank" rel="noopener">π₀ official ↗</a>
+  <a href="https://arxiv.org/abs/2410.24164" target="_blank" rel="noopener">π₀ arXiv ↗</a>
+  <a href="https://www.pi.website/blog/pi05" target="_blank" rel="noopener">π₀.₅ official ↗</a>
+  <a href="https://arxiv.org/abs/2504.16054" target="_blank" rel="noopener">π₀.₅ arXiv ↗</a>
+  <a href="https://website.pi-asset.com/pi06star/PI06_model_card.pdf" target="_blank" rel="noopener">π₀.₆ model card ↗</a>
+  <a href="https://www.pi.website/blog/pistar06" target="_blank" rel="noopener">π*₀.₆ official ↗</a>
+  <a href="https://arxiv.org/abs/2511.14759" target="_blank" rel="noopener">π*₀.₆ arXiv ↗</a>
+  <a href="https://github.com/Physical-Intelligence/openpi" target="_blank" rel="noopener">openpi GitHub ↗</a>
+</div>
+
+<div class="pi-meta">
+  <div class="k">Topic</div><div>Physical Intelligence π-series Vision-Language-Action models</div>
+  <div class="k">Research question</div><div>π₀ → π₀.₅ → π₀.₆/π*₀.₆에서 architecture, data, generalization, post-training 철학이 어떻게 진화했는가?</div>
+  <div class="k">Audience</div><div>VLA / robot learning / manipulation engineers & researchers</div>
+  <div class="k">Reference date</div><div>2026-10-04</div>
+  <div class="k">Scope</div><div>π₀, π₀.₅, π₀.₆, π*₀.₆ 중심. π₀-FAST와 π₀.₇은 연결 맥락만 다룸.</div>
+  <div class="k">Confidence</div><div><strong>High</strong> for architecture/paper claims; <strong>Medium</strong> for deployment generalization beyond published evaluations.</div>
+</div>
+
+<h2>Executive Summary</h2>
+
+<div class="paper-note">
+<strong>핵심 결론.</strong> π-series의 진화는 단순히 모델 크기를 늘린 과정이 아니다. <strong>π₀</strong>는 VLM에 continuous flow-matching action expert를 결합해 고주파 dexterous control을 가능하게 했고, <strong>π₀.₅</strong>는 heterogeneous co-training과 high-level semantic prediction을 통해 unseen environment generalization을 전면에 내세웠다. <strong>π₀.₆</strong>는 더 큰 Gemma 3 backbone, 860M action expert, Knowledge Insulation, richer metadata conditioning으로 out-of-the-box performance를 강화한다. <strong>π*₀.₆</strong>는 여기서 한 단계 더 나아가 RECAP을 통해 demonstrations뿐 아니라 autonomous rollouts와 human corrections까지 학습 신호로 사용하며 deployment experience를 policy improvement loop로 되돌린다.
+</div>
+
+<ul>
+  <li><strong>가장 중요한 구조적 변화:</strong> action generation 자체보다 <em>어떤 지식을 보존하고, 어떤 데이터로 generalization을 만들며, deployment 경험을 어떻게 다시 학습에 넣는가</em>가 세대 진화의 중심이 됐다.</li>
+  <li><strong>가장 중요한 실험적 근거:</strong> π₀.₅는 unseen homes에서 10–15분 길이의 long-horizon manipulation을 보였고, π₀.₆은 π₀.₅보다 out-of-the-box static/mobile/generalization task에서 개선됐으며, π*₀.₆ RECAP은 hardest tasks에서 throughput을 2× 이상 높이고 failure rate를 대략 절반으로 낮췄다고 보고한다.</li>
+  <li><strong>엔지니어링 권고:</strong> 현재 공개 코드/weights 기반 연구는 π₀/π₀.₅ openpi가 가장 현실적이다. π₀.₆/π*₀.₆은 architecture와 training recipe는 공개되어 있지만 공식 openpi base checkpoint로는 제공되지 않으므로, RECAP 계열 연구는 재구현 또는 자체 post-training pipeline 관점으로 보는 것이 안전하다.</li>
+  <li><strong>미해결 위험:</strong> π₀.₆ 이후의 대규모 pretraining mixture와 exact data recipe는 완전 공개가 아니며, 많은 deployment 결과가 PI 및 partner 내부 평가다. 따라서 “광범위한 generalist capability”와 “특정 배포에서의 높은 reliability”를 구분해서 해석해야 한다.</li>
+</ul>
+
+<h2>1. 모델 계보: action model에서 learning system으로</h2>
+
+<div class="pi-evolution">
+  <div class="pi-stage"><strong>π₀</strong><span>VLM + action expert<br>continuous flow matching<br>cross-embodiment pretraining</span><span class="arrow">Dexterity →</span></div>
+  <div class="pi-stage"><strong>π₀.₅</strong><span>heterogeneous co-training<br>high-level subtask text<br>FAST pretrain + flow post-train</span><span class="arrow">Open-world →</span></div>
+  <div class="pi-stage"><strong>π₀.₆</strong><span>Gemma 3 4B backbone<br>860M action expert<br>KI + metadata conditioning</span><span class="arrow">Out-of-box →</span></div>
+  <div class="pi-stage"><strong>π*₀.₆</strong><span>value function<br>advantage conditioning<br>RECAP deployment loop</span><span class="arrow">Self-improvement</span></div>
+</div>
+
+<p><span class="evidence e-infer">추론</span> 이 계보를 가장 간단히 요약하면 <strong>π₀는 “어떻게 잘 움직일까?”, π₀.₅는 “처음 보는 곳에서도 어떻게 할까?”, π₀.₆은 “더 강한 prior를 유지하면서 어떻게 더 빠르고 안정적으로 실행할까?”, π*₀.₆은 “실제 배포에서 실패한 뒤 어떻게 더 나아질까?”</strong>라는 질문으로 이동한다.</p>
+
+<h2>2. π₀: VLM을 50 Hz dexterous control로 연결</h2>
+
+<p><span class="evidence e-paper">논문 근거</span> π₀의 핵심은 pretrained VLM의 semantic knowledge와 robot action generation을 한 모델에 결합하되, actions를 language token으로만 discretize하지 않고 <strong>continuous flow matching</strong>으로 생성한다는 것이다. 논문은 약 10,000시간 robot data, 7개의 자체 robot configuration과 68 tasks, Open X-Embodiment를 사용한 cross-embodiment recipe를 설명한다.</p>
+
+<figure class="pi-figure">
+  <img src="https://arxiv.org/html/2410.24164v4/teaser_fig.png" alt="pi0 generalist robot policy overview">
+  <figcaption>π₀ 전체 training/deployment 개요. Diverse cross-embodiment data + VLM pretraining + action expert → zero-shot 또는 post-training task specialization. Source: π₀ paper, Fig. 1.</figcaption>
+</figure>
+
+<h3>2.1 Architecture: VLM expert + action expert</h3>
+
+<figure class="pi-figure">
+  <img src="https://arxiv.org/html/2410.24164v4/overview.png" alt="pi0 architecture with pretrained VLM and action expert">
+  <figcaption>π₀ architecture. Image/text는 pretrained VLM expert가, proprioception/action은 별도 action expert가 처리하며 attention을 통해 상호작용한다. Source: π₀ paper, Fig. 3.</figcaption>
+</figure>
+
+<p>Observation은 여러 RGB image, language command, proprioceptive state로 구성된다.</p>
+
+<p>$$
+\mathbf{o}_t=[\mathbf{I}^1_t,\ldots,\mathbf{I}^n_t,\ell_t,\mathbf{q}_t],
+\qquad
+\mathbf{A}_t=[\mathbf{a}_t,\ldots,\mathbf{a}_{t+H-1}],\ H=50.
+$$</p>
+
+<p>Flow matching에서는 clean action chunk와 Gaussian noise 사이의 경로를 만들고 vector field를 학습한다.</p>
+
+<p>$$
+\mathbf{A}_t^{\tau}=\tau\mathbf{A}_t+(1-\tau)\epsilon,
+\qquad \epsilon\sim\mathcal N(0,I),
+$$</p>
+
+<p>$$
+\mathcal L^{\tau}(\theta)=
+\mathbb E\left[
+\left\|
+\mathbf v_\theta(\mathbf A_t^{\tau},\mathbf o_t)-(\mathbf A_t-\epsilon)
+\right\|_2^2
+\right].
+$$</p>
+
+<p><span class="evidence e-infer">추론</span> 이 설계의 실질적 의미는 VLM에게 “motor token vocabulary”를 억지로 학습시키는 대신, action side를 continuous generative process로 분리해 <strong>고주파·고정밀 action chunk</strong>를 생성한다는 것이다. π-series 전체에서 이 action-expert concept가 계속 유지된다.</p>
+
+<h3>2.2 π₀의 강점과 한계</h3>
+
+<div class="pi-two">
+  <div class="pi-card"><h4>강점</h4><p>Cross-embodiment, high-frequency continuous action, dexterous manipulation, pretrain/post-train separation을 한 framework로 정리했다.</p></div>
+  <div class="pi-card"><h4>한계</h4><p>Generalist base model의 broad capability는 강하지만 π₀ 자체의 open-world generalization은 π₀.₅가 해결하려는 다음 문제로 남았다. Complex task에서 고품질 post-training 의존도도 높다.</p></div>
+</div>
+
+<h2>3. π₀.₅: “더 많은 robot data”보다 heterogeneous knowledge transfer</h2>
+
+<p><span class="evidence e-paper">논문 근거</span> π₀.₅는 π₀의 핵심 architecture를 유지하면서 <strong>co-training mixture</strong>를 대폭 확장한다. 약 400시간의 target mobile manipulation data만 보는 대신, 다른 robot embodiment, diverse homes, high-level subtask labels, verbal instructions, object detection/VQA/captioning 같은 web multimodal data를 함께 학습한다. 첫 pretraining phase에서 household mobile manipulator example이 아닌 데이터가 97.6%라고 보고한다.</p>
+
+<figure class="pi-figure">
+  <img src="https://arxiv.org/html/2504.16054v1/pretraining-finetuning-tasks.png" alt="pi0.5 heterogeneous pretraining and post-training data">
+  <figcaption>π₀.₅ data mixture: cross-embodiment robot data, diverse mobile/non-mobile manipulation, high-level semantic labels, multimodal web data, verbal instruction. Source: π₀.₅ paper.</figcaption>
+</figure>
+
+<h3>3.1 Hybrid discrete + continuous training</h3>
+
+<figure class="pi-figure">
+  <img src="https://arxiv.org/html/2504.16054v1/Figure_3.png" alt="pi0.5 pretraining post-training architecture">
+  <figcaption>π₀.₅ architecture. Pretraining은 FAST 기반 discrete action/token objectives로 효율을 얻고, post-training/inference에서는 300M action expert의 flow matching으로 continuous actions를 생성한다. Source: π₀.₅ paper, Fig. 3.</figcaption>
+</figure>
+
+<p>π₀.₅는 high-level semantic subtask $\hat\ell$과 low-level action chunk를 같은 모델에서 factorize한다.</p>
+
+<p>$$
+\pi_\theta(\mathbf a_{t:t+H},\hat\ell\mid\mathbf o_t,\ell)
+=
+\pi_\theta(\mathbf a_{t:t+H}\mid\mathbf o_t,\hat\ell)
+\pi_\theta(\hat\ell\mid\mathbf o_t,\ell).
+$$</p>
+
+<p>Training은 discrete token cross-entropy와 flow-matching loss를 결합할 수 있다.</p>
+
+<p>$$
+\mathcal L
+=
+\mathcal H_{\text{text/FAST}}
++
+\alpha\left\|\omega-\mathbf a-f^a_\theta(\mathbf a^{\tau,\omega},\mathbf o,\ell)\right\|^2.
+$$</p>
+
+<p>실제 inference에서는 먼저 <em>“pick up the pillow”</em> 같은 high-level subtask를 text로 생성하고, 그 subtask를 condition으로 50-step continuous action chunk를 만든다. 논문은 이 unified high/low-level mechanism이 long-horizon behavior에 중요하다고 분석한다.</p>
+
+<h3>3.2 무엇이 generalization을 만든다고 주장하는가?</h3>
+
+<table class="pi-matrix">
+<thead><tr><th>Data source</th><th>역할</th><th>Ablation 해석</th></tr></thead>
+<tbody>
+<tr><td>MM</td><td>target mobile manipulation</td><td>직접 task/embodiment 경험</td></tr>
+<tr><td>ME</td><td>다양한 home의 static robot</td><td>제거 시 ID/OOD 성능 저하</td></tr>
+<tr><td>CE</td><td>cross-embodiment lab tasks</td><td>제거 시 mock-home performance 저하</td></tr>
+<tr><td>HL</td><td>semantic subtask prediction</td><td>long-horizon decomposition에 중요</td></tr>
+<tr><td>WD</td><td>web multimodal data</td><td>특히 unseen object/language OOD에 도움</td></tr>
+<tr><td>VI</td><td>verbal instruction</td><td>작은 비율이어도 high-level policy에 중요</td></tr>
+</tbody>
+</table>
+
+<p><span class="evidence e-paper">논문 근거</span> π₀.₅는 training에 없던 새로운 homes에서 kitchen/bedroom cleanup, bed making 등 10–15분 규모의 long-horizon behavior를 수행했다. 또한 ME/CE 제거 ablation에서 성능이 크게 낮아지고, WD는 특히 OOD language/object following에 영향을 준다고 보고한다.</p>
+
+<h2>4. Knowledge Insulation: π₀.₅ 이후의 중요한 연결 고리</h2>
+
+<p><span class="evidence e-official">공식 문서</span> Physical Intelligence는 π₀.₅에 Knowledge Insulation(KI)을 적용한 recipe를 공개했다. 핵심은 action expert의 continuous-control gradient가 main VLM backbone을 훼손하지 않도록 <strong>gradient path를 절연</strong>하면서, VLM side는 FAST token 및 multimodal objectives를 통해 semantic knowledge를 유지하는 것이다.</p>
+
+<div class="paper-note"><strong>Engineering intuition:</strong> “큰 VLM이 motor learning 때문에 언어/시각 지식을 잃지 않게 하고, action expert는 motor cortex처럼 continuous control에 특화시킨다.” π₀.₆ model card에서 이 recipe가 명시적으로 이어진다.</div>
+
+<h2>5. π₀.₆: stronger backbone + richer conditioning + out-of-box performance</h2>
+
+<p><span class="evidence e-official">공식 model card</span> π₀.₆은 π₀.₅의 hierarchical design을 유지하지만 backbone과 prompt/data recipe를 업그레이드한다.</p>
+
+<table>
+<thead><tr><th>Component</th><th>π₀.₆ 공개 사양</th><th>의미</th></tr></thead>
+<tbody>
+<tr><td>VLM backbone</td><td>Gemma 3 4B + vision encoder</td><td>더 강한 language/vision prior</td></tr>
+<tr><td>Action expert</td><td>≈860M parameters</td><td>continuous action generation capacity 확대</td></tr>
+<tr><td>Images</td><td>최대 4 × 448×448</td><td>base + wrist cameras + optional rear view</td></tr>
+<tr><td>Training</td><td>Knowledge Insulation</td><td>action gradient를 VLM backbone에서 차단</td></tr>
+<tr><td>Prompt</td><td>language + optional metadata</td><td>execution quality/style 등의 conditioning 확장</td></tr>
+<tr><td>Inference</td><td>5 denoising steps, 3 cameras: 63 ms on H100</td><td>실시간 action chunk generation 목표</td></tr>
+</tbody>
+</table>
+
+<p><span class="evidence e-official">공식 model card</span> task-specific fine-tuning 없이 π₀.₅-KI와 비교한 out-of-the-box evaluation에서 π₀.₆은 static tasks, mobile tasks, generalization-focused tasks 전반에서 개선을 보고한다. 특히 이전에는 fine-tuning이 있어야 non-zero success가 나오던 laundry folding과 box assembly에서 π₀.₆은 out-of-the-box로 laundry를 안정적으로 fold하고 box를 완전 조립하는 데 20% 성공했다고 model card가 설명한다.</p>
+
+<h3>5.1 Partner deployment evidence — 무엇을 믿어야 하나?</h3>
+
+<table>
+<thead><tr><th>Source</th><th>Reported result</th><th>Evidence type</th><th>해석</th></tr></thead>
+<tbody>
+<tr><td>Weave laundromat</td><td>π₀.₆ > π₀.₅ autonomy; partner pretraining data 포함 시 missed grasp 42%↓, intervention 50%↓</td><td><span class="evidence e-company">회사/파트너 주장</span></td><td>실제 customer deployment signal은 강하지만 independent benchmark는 아님</td></tr>
+<tr><td>Ultra order packing</td><td>π₀.₆가 π₀.₅보다 success rate 개선; partner pretraining data가 throughput 개선</td><td><span class="evidence e-company">회사/파트너 주장</span></td><td>95% CI는 제시되지만 원 데이터/프로토콜 공개는 제한적</td></tr>
+</tbody>
+</table>
+
+<h2>6. π*₀.₆ + RECAP: imitation ceiling을 deployment learning으로 넘기</h2>
+
+<p><span class="evidence e-paper">논문 근거</span> π*₀.₆은 π₀.₆ base를 RECAP(<strong>RL with Experience and Corrections via Advantage-conditioned Policies</strong>)에 맞게 확장한 모델이다. 중요한 점은 “큰 VLA에 PPO를 직접 거는 것”이 아니라, value function으로 dataset 내 action quality를 평가하고 policy를 <strong>advantage indicator</strong>에 condition하는 방식으로 policy improvement를 구현한다는 점이다.</p>
+
+<figure class="pi-figure">
+  <img src="https://arxiv.org/html/2511.14759v2/figures/teaser.png" alt="RECAP overview for pi star 0.6">
+  <figcaption>RECAP loop: demonstrations + autonomous rollouts + human interventions → value function → advantage-conditioned VLA → improved deployment policy. Source: π*₀.₆ paper, Fig. 1.</figcaption>
+</figure>
+
+<figure class="pi-figure">
+  <img src="https://arxiv.org/html/2511.14759v2/figures/filmstrip.png" alt="pi star 0.6 cafe box laundry tasks">
+  <figcaption>π*₀.₆ task examples: espresso, box assembly, diverse laundry. Source: π*₀.₆ paper.</figcaption>
+</figure>
+
+<h3>6.1 RECAP의 learning loop</h3>
+
+<ol>
+<li><strong>Generalist offline RL pretraining:</strong> demonstration dataset으로 value function과 advantage-conditioned π*₀.₆를 준비.</li>
+<li><strong>Downstream SFT:</strong> target task demonstration으로 초기 policy를 specialization.</li>
+<li><strong>On-robot collection:</strong> autonomous rollouts + 필요 시 human teleoperation intervention 수집.</li>
+<li><strong>Value update:</strong> deployment data와 sparse reward를 이용해 value estimate 개선.</li>
+<li><strong>Policy extraction:</strong> positive-advantage behavior에 condition하도록 VLA를 다시 학습.</li>
+<li><strong>Iterate:</strong> improved policy로 다시 roll out하여 closed-loop data engine을 형성.</li>
+</ol>
+
+<p><span class="evidence e-infer">추론</span> 이것은 robot foundation model의 post-training을 <strong>static dataset fine-tuning → deployment-centric iterative improvement</strong>로 바꾸는 중요한 방향이다. 특히 intervention을 단순 failure recovery가 아니라 학습 데이터로 회수한다는 점이 production robotics와 잘 맞는다.</p>
+
+<h3>6.2 Throughput: 성공률만이 아니라 “시간당 유효 작업량”</h3>
+
+<figure class="pi-figure">
+  <img src="https://arxiv.org/html/2511.14759v2/figures/experiment1/Laundry_T-Shirts_and_Shorts_throughput_plot.png" alt="RECAP laundry throughput chart">
+  <figcaption>Simple laundry throughput. π₀.₅ pretrain → π₀.₆ → π*₀.₆ offline RL → SFT → full RECAP으로 단계적 증가. Source: π*₀.₆ paper.</figcaption>
+</figure>
+
+<figure class="pi-figure">
+  <img src="https://arxiv.org/html/2511.14759v2/figures/experiment1/Laundry_Diverse_-_Hardest_Item_throughput_plot.png" alt="RECAP diverse laundry throughput chart">
+  <figcaption>Hardest diverse-laundry item에서 on-robot RECAP 이후 throughput이 크게 증가한다. Source: π*₀.₆ paper.</figcaption>
+</figure>
+
+<figure class="pi-figure">
+  <img src="https://arxiv.org/html/2511.14759v2/figures/experiment1/Laundry_T-Shirts_and_Shorts_success_rate_plot.png" alt="RECAP laundry success rate chart">
+  <figcaption>Simple laundry success rate progression. Full RECAP은 90%대 성공률을 보고한다. Source: π*₀.₆ paper.</figcaption>
+</figure>
+
+<h3>6.3 반복적 improvement</h3>
+
+<figure class="pi-figure">
+  <img src="https://arxiv.org/html/2511.14759v2/figures/experiment3/Laundry_T-Shirts_and_Shorts_throughput_plot.png" alt="RECAP iterative throughput improvement">
+  <figcaption>RECAP iteration에 따른 throughput 상승. 단발성 fine-tuning이 아니라 반복 data collection/policy improvement가 핵심이다. Source: π*₀.₆ paper.</figcaption>
+</figure>
+
+<p><span class="evidence e-paper">논문 근거</span> 논문은 diverse laundry와 espresso에서 on-robot experience를 포함하면 throughput이 2× 이상 개선되고, hardest tasks에서 failure rate가 약 2× 감소했다고 보고한다. 최종 모델은 espresso를 약 13시간 연속 수행했고, 새로운 home에서 novel laundry를 2시간 이상 fold했으며, 실제 factory packaging에 사용되는 boxes를 조립했다고 보고한다.</p>
+
+<h2>7. 한눈에 보는 세대별 architecture / training 비교</h2>
+
+<div class="paper-table-wrap">
+<table class="pi-matrix">
+<thead><tr><th>Model</th><th>Primary goal</th><th>Backbone / head</th><th>Action representation</th><th>Key data/training idea</th><th>Public status</th></tr></thead>
+<tbody>
+<tr><td><strong>π₀</strong></td><td>general dexterous control</td><td>PaliGemma-class VLM + ~300M action expert</td><td>Flow matching, H=50</td><td>10k+ h cross-embodiment pretrain + post-train</td><td>Code + weights in openpi</td></tr>
+<tr><td><strong>π₀.₅</strong></td><td>open-world generalization</td><td>same family + ~300M action expert</td><td>FAST discrete pretrain + flow post-train</td><td>MM/ME/CE + HL + WD + VI heterogeneous co-training</td><td>Code + weights in openpi</td></tr>
+<tr><td><strong>π₀.₆</strong></td><td>stronger out-of-box control</td><td>Gemma 3 4B + ~860M action expert</td><td>FAST + flow, 5 denoising steps</td><td>Knowledge Insulation + richer metadata + broader data</td><td>Model card public; official openpi base checkpoint not listed</td></tr>
+<tr><td><strong>π*₀.₆</strong></td><td>learn from deployment experience</td><td>π₀.₆ + value function / advantage conditioning</td><td>same VLA action path + RL conditioning</td><td>RECAP: demos + rollouts + corrections + iterative offline RL</td><td>Paper public; training recipe described, weights not in official openpi</td></tr>
+</tbody>
+</table>
+</div>
+
+<h2>8. Open-source & reproducibility assessment</h2>
+
+<table>
+<thead><tr><th>Item</th><th>π₀</th><th>π₀.₅</th><th>π₀.₆ / π*₀.₆</th></tr></thead>
+<tbody>
+<tr><td>Official code</td><td>Available</td><td>Available</td><td>Partial / paper-level</td></tr>
+<tr><td>Base checkpoint</td><td>Available</td><td>Available</td><td>Not listed in official openpi</td></tr>
+<tr><td>JAX</td><td>Yes</td><td>Yes</td><td>Public reference recipe only</td></tr>
+<tr><td>PyTorch</td><td>Official support</td><td>Official support</td><td>No equivalent official openpi release identified</td></tr>
+<tr><td>Inference requirement</td><td colspan="2">openpi: &gt;8 GB VRAM estimated</td><td>model card: 63 ms/chunk on H100, 3 cameras, 5 denoising steps</td></tr>
+<tr><td>Full fine-tuning</td><td colspan="2">openpi: &gt;70 GB VRAM estimated</td><td>Exact full training infra not publicly reproducible from model card alone</td></tr>
+</tbody>
+</table>
+
+<div class="paper-note"><strong>Important:</strong> “π₀.₆ architecture가 공개되어 있다”와 “π₀.₆을 openpi에서 그대로 fine-tune할 수 있다”는 같은 뜻이 아니다. 2026-10-04 기준 공식 openpi README의 base-model 목록은 π₀, π₀-FAST, π₀.₅를 명시한다.</div>
+
+<h2>9. Trade-offs</h2>
+
+<h3>Advantages</h3>
+<ul>
+<li><strong>π₀:</strong> continuous flow matching을 이용한 high-frequency manipulation과 공개 생태계.</li>
+<li><strong>π₀.₅:</strong> target embodiment data만 늘리지 않고 heterogeneous knowledge transfer로 generalization을 개선.</li>
+<li><strong>π₀.₆:</strong> stronger VLM/action capacity와 KI로 semantics와 motor specialization을 분리.</li>
+<li><strong>π*₀.₆:</strong> deployment failures/corrections를 다시 학습 signal로 회수하는 closed-loop post-training.</li>
+</ul>
+
+<h3>Disadvantages / limitations</h3>
+<ul>
+<li>Large-scale pretraining data mixture와 sampling weights는 완전 재현이 어렵다.</li>
+<li>π₀.₅의 household generalization은 인상적이지만 여전히 특정 robot family와 curated training recipe에 의존한다.</li>
+<li>π₀.₆/π*₀.₆의 가장 강한 deployment 결과는 PI 또는 partner-reported evidence가 많다.</li>
+<li>RECAP은 value/reward labeling, autonomous rollouts, intervention infrastructure가 필요하므로 단순 SFT보다 system engineering cost가 크다.</li>
+<li>Long-horizon memory/partial observability는 π₀.₅ 논문에서도 limitation으로 남았고 이후 π₀.₇에서 별도 방향으로 확장된다.</li>
+</ul>
+
+<h2>10. Engineering Recommendations</h2>
+
+<table>
+<thead><tr><th>목표</th><th>추천 시작점</th><th>이유</th></tr></thead>
+<tbody>
+<tr><td>자체 robot에 VLA를 빠르게 fine-tune</td><td><strong>π₀.₅ openpi</strong></td><td>공식 base checkpoint, DROID/LIBERO examples, JAX/PyTorch 지원</td></tr>
+<tr><td>Flow matching / action expert 연구</td><td><strong>π₀</strong></td><td>architecture가 단순하고 paper-code mapping이 가장 명확</td></tr>
+<tr><td>새 환경 / object generalization</td><td><strong>π₀.₅</strong> + data mixture ablation</td><td>ME/CE/WD/HL의 효과를 직접 실험하기 쉬움</td></tr>
+<tr><td>실패 recovery / deployment improvement</td><td><strong>π₀.₅ warm start + RECAP-style pipeline</strong></td><td>π₀.₆ 공식 weights가 없어도 value/advantage loop 연구 가능</td></tr>
+<tr><td>production throughput 최적화</td><td>Success rate보다 <strong>successes/hour</strong> 병행</td><td>RECAP이 보여준 핵심: 속도와 성공률을 함께 봐야 deployment value를 측정 가능</td></tr>
+</tbody>
+</table>
+
+<h2>11. Experiment Plan: π-family를 우리 환경에서 비교한다면</h2>
+
+<div class="pi-card">
+<p><strong>Hypothesis.</strong> π₀.₅의 heterogeneous prior는 π₀보다 unseen scene/object에 강하고, deployment rollout + corrections를 이용한 advantage-conditioned post-training은 동일한 demonstration budget에서 failure recovery와 throughput을 개선할 것이다.</p>
+<p><strong>Baseline.</strong> π₀ base fine-tune / π₀.₅ base fine-tune / π₀.₅ + deployment-correction post-training.</p>
+<p><strong>Independent variables.</strong> backbone checkpoint, co-training data mix, number of demo hours, rollout/correction ratio, action horizon, inference denoising steps.</p>
+<p><strong>Metrics.</strong> task success, successes/hour, intervention rate, recovery success after perturbation, OOD object/scene success, mean completion time, inference latency.</p>
+<p><strong>Dataset splits.</strong> ID scenes / unseen scenes / unseen objects / perturbation-recovery split를 명시적으로 분리.</p>
+<p><strong>Statistical test.</strong> task마다 충분한 rollout 수를 확보하고 Wilson 95% CI 또는 bootstrap CI를 success rate에 사용. Throughput은 episode duration 분포와 함께 보고.</p>
+<p><strong>Promotion criterion.</strong> ID 성능을 유의하게 악화시키지 않으면서 OOD success와 throughput 개선 + intervention 감소가 재현될 때 승격.</p>
+</div>
+
+<h2>12. Risks, Gaps and Open Questions</h2>
+
+<ul>
+<li><strong>Scaling law:</strong> 어떤 data source가 어느 capability를 얼마나 효율적으로 만든다는 정량 scaling law는 아직 부족하다.</li>
+<li><strong>Value generalization:</strong> RECAP value function이 task/embodiment가 크게 바뀔 때 얼마나 transfer되는가?</li>
+<li><strong>Reward specification:</strong> sparse/human reward를 어떻게 안정적으로 설계하고 자동화할 것인가?</li>
+<li><strong>Memory:</strong> 10–15분 이상 task에서 history와 object permanence를 어떻게 처리할 것인가?</li>
+<li><strong>Cross-embodiment:</strong> morphology/action-space gap이 큰 humanoid까지 같은 recipe가 얼마나 유지되는가?</li>
+<li><strong>Precision manufacturing:</strong> sub-millimeter insertion/force-controlled assembly 같은 공정에서 VLA prior와 low-level residual controller를 어떻게 결합할 것인가?</li>
+</ul>
+
+<h2>13. π₀.₇로 이어지는 방향</h2>
+
+<p><span class="evidence e-official">공식 자료</span> Physical Intelligence는 2026년 4월 π₀.₇을 공개하며 steerability, richer prompting, emergent/compositional capability를 다음 방향으로 제시했다. 따라서 π-series의 큰 흐름은 <strong>dexterity → generalization → reliable out-of-box control → learning from experience → steerable/compositional generalist</strong>로 읽을 수 있다.</p>
+
+<h2>14. Conclusions and Implications</h2>
+
+<div class="pi-verdict">
+<p><strong>Engineering conclusion.</strong> 공개 연구 관점에서 가장 실용적인 sweet spot은 현재 π₀.₅/openpi다. π₀은 architecture를 이해하기 좋고, π₀.₅는 실제 fine-tuning/generalization 실험에 가장 접근성이 좋다. π₀.₆/π*₀.₆은 “어떤 모델 weight를 쓰느냐”보다 <strong>KI, metadata, value function, rollout/correction data engine, throughput-centric evaluation</strong> 같은 training-system 설계에서 더 큰 연구 가치가 있다.</p>
+<p><strong>Confidence:</strong> High for paper/model-card architecture claims; Medium for broad production generalization.</p>
+<p><strong>Bottom line:</strong> π-series는 VLA를 단일 end-to-end policy에서 <em>지식을 보존하고, 다양한 데이터로 generalize하고, deployment experience로 스스로 개선되는 robot learning system</em>으로 확장해 온 계보다.</p>
+</div>
+
+<h2>15. References</h2>
+<ol>
+<li>Black et al., <em>π₀: A Vision-Language-Action Flow Model for General Robot Control</em>, arXiv:2410.24164 / RSS 2025. <a href="https://arxiv.org/abs/2410.24164">arXiv</a> · <a href="https://www.pi.website/blog/pi0">Project</a>.</li>
+<li>Black et al., <em>π₀.₅: a Vision-Language-Action Model with Open-World Generalization</em>, arXiv:2504.16054 / CoRL 2025. <a href="https://arxiv.org/abs/2504.16054">arXiv</a> · <a href="https://www.pi.website/blog/pi05">Project</a>.</li>
+<li>Physical Intelligence, <em>π₀.₆ Model Card</em>, Nov. 17, 2025. <a href="https://website.pi-asset.com/pi06star/PI06_model_card.pdf">PDF</a>.</li>
+<li>Amin et al., <em>π*₀.₆: a VLA That Learns From Experience</em>, arXiv:2511.14759. <a href="https://arxiv.org/abs/2511.14759">arXiv</a> · <a href="https://www.pi.website/blog/pistar06">Project</a>.</li>
+<li>Physical Intelligence, <em>VLAs that Train Fast, Run Fast, and Generalize Better</em> (Knowledge Insulation). <a href="https://www.pi.website/research/knowledge_insulation">Official research page</a>.</li>
+<li>Physical Intelligence, <em>openpi</em>. <a href="https://github.com/Physical-Intelligence/openpi">GitHub</a>.</li>
+<li>Physical Intelligence, <em>The Physical Intelligence Layer</em>, Feb. 24, 2026. <a href="https://www.pi.website/blog/partner">Partner deployments</a>.</li>
+<li>Physical Intelligence, <em>π₀.₇: a Steerable Model with Emergent Capabilities</em>, Apr. 16, 2026. <a href="https://www.pi.website/blog/pi07">Official post</a>.</li>
+</ol>
