@@ -1,5 +1,6 @@
 <!doctype html>
-<html lang="en" data-theme="dark">
+{% assign page_lang = page.lang | default: 'en' %}
+<html lang="{{ page_lang }}" data-theme="dark">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -20,9 +21,23 @@
 <body>
   <header class="site-header">
     <div class="wrap header-inner">
-      <a class="brand" href="{{ '/' | relative_url }}">S. Lee</a>
+      <a class="brand" href="{% if page_lang == 'ko' %}{{ '/ko/' | relative_url }}{% else %}{{ '/' | relative_url }}{% endif %}">S. Lee</a>
       <div class="header-actions">
-        <a class="nav-link" href="{{ '/' | relative_url }}#posts">Posts</a>
+        <a class="nav-link" href="{% if page_lang == 'ko' %}{{ '/ko/' | relative_url }}#posts{% else %}{{ '/' | relative_url }}#posts{% endif %}">{% if page_lang == 'ko' %}글{% else %}Posts{% endif %}</a>
+
+        {% if page_lang == 'ko' %}
+          {% assign switch_url = page.url | remove_first: '/ko' %}
+          {% if switch_url == '' %}{% assign switch_url = '/' %}{% endif %}
+          <a class="theme-toggle" href="{{ switch_url | relative_url }}" aria-label="Switch to English" title="Switch to English">EN</a>
+        {% else %}
+          {% if page.url == '/' %}
+            {% assign switch_url = '/ko/' %}
+          {% else %}
+            {% assign switch_url = '/ko' | append: page.url %}
+          {% endif %}
+          <a class="theme-toggle" href="{{ switch_url | relative_url }}" aria-label="한국어로 전환" title="한국어로 전환">한</a>
+        {% endif %}
+
         <button class="theme-toggle" type="button" aria-label="Switch color theme" title="Switch color theme">
           <span class="theme-icon" data-theme-icon aria-hidden="true">☀</span>
           <span data-theme-label>Light</span>
