@@ -18,25 +18,44 @@
   <script defer src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js"></script>
   {% endif %}
 </head>
-<body>
+<body data-lang="{{ page_lang }}" data-search-url="{{ '/search.json' | relative_url }}">
+  <div class="drawer-backdrop" data-drawer-backdrop aria-hidden="true"></div>
+
+  <aside class="site-drawer" data-site-drawer aria-hidden="true" aria-label="{% if page_lang == 'ko' %}사이트 메뉴{% else %}Site navigation{% endif %}">
+    <div class="drawer-header">
+      <a class="drawer-brand" href="{% if page_lang == 'ko' %}{{ '/ko/' | relative_url }}{% else %}{{ '/' | relative_url }}{% endif %}">S. Lee</a>
+      <button class="drawer-close" type="button" data-drawer-close aria-label="{% if page_lang == 'ko' %}메뉴 닫기{% else %}Close menu{% endif %}">×</button>
+    </div>
+
+    <nav class="drawer-nav">
+      <a href="{% if page_lang == 'ko' %}{{ '/ko/' | relative_url }}{% else %}{{ '/' | relative_url }}{% endif %}">
+        <span class="drawer-icon" aria-hidden="true">⌂</span><span>{% if page_lang == 'ko' %}홈{% else %}Home{% endif %}</span>
+      </a>
+      <a href="{% if page_lang == 'ko' %}{{ '/ko/' | relative_url }}#posts{% else %}{{ '/' | relative_url }}#posts{% endif %}">
+        <span class="drawer-icon" aria-hidden="true">▤</span><span>{% if page_lang == 'ko' %}글{% else %}Posts{% endif %}</span>
+      </a>
+      <a href="{% if page_lang == 'ko' %}{{ '/ko/categories/' | relative_url }}{% else %}{{ '/categories/' | relative_url }}{% endif %}">
+        <span class="drawer-icon" aria-hidden="true">#</span><span>{% if page_lang == 'ko' %}카테고리{% else %}Categories{% endif %}</span>
+      </a>
+      <a href="https://github.com/rokmc956k" target="_blank" rel="noopener">
+        <span class="drawer-icon" aria-hidden="true">↗</span><span>GitHub</span>
+      </a>
+    </nav>
+  </aside>
+
   <header class="site-header">
     <div class="wrap header-inner">
       <div class="header-left">
-        <details class="site-menu">
-          <summary class="menu-button" aria-label="Open navigation menu" title="Menu">
-            <span></span><span></span><span></span>
-          </summary>
-          <nav class="menu-panel" aria-label="Primary navigation">
-            <a href="{% if page_lang == 'ko' %}{{ '/ko/' | relative_url }}{% else %}{{ '/' | relative_url }}{% endif %}">{% if page_lang == 'ko' %}홈{% else %}Home{% endif %}</a>
-            <a href="{% if page_lang == 'ko' %}{{ '/ko/' | relative_url }}#posts{% else %}{{ '/' | relative_url }}#posts{% endif %}">{% if page_lang == 'ko' %}글{% else %}Posts{% endif %}</a>
-            <a href="https://github.com/rokmc956k" target="_blank" rel="noopener">GitHub ↗</a>
-          </nav>
-        </details>
+        <button class="menu-button" type="button" data-drawer-open aria-label="{% if page_lang == 'ko' %}메뉴 열기{% else %}Open menu{% endif %}" title="Menu">
+          <span></span><span></span><span></span>
+        </button>
         <a class="brand" href="{% if page_lang == 'ko' %}{{ '/ko/' | relative_url }}{% else %}{{ '/' | relative_url }}{% endif %}">S. Lee</a>
       </div>
 
       <div class="header-actions">
-        <a class="nav-link" href="{% if page_lang == 'ko' %}{{ '/ko/' | relative_url }}#posts{% else %}{{ '/' | relative_url }}#posts{% endif %}">{% if page_lang == 'ko' %}글{% else %}Posts{% endif %}</a>
+        <button class="icon-button search-button" type="button" data-search-open aria-label="{% if page_lang == 'ko' %}검색{% else %}Search{% endif %}" title="{% if page_lang == 'ko' %}검색{% else %}Search{% endif %}">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="6.5"></circle><path d="m16 16 4.25 4.25"></path></svg>
+        </button>
 
         {% if page_lang == 'ko' %}
           {% assign switch_url = page.url | remove_first: '/ko' %}
@@ -70,6 +89,20 @@
     </div>
   </footer>
 
+  <div class="search-overlay" data-search-overlay aria-hidden="true">
+    <div class="search-dialog" role="dialog" aria-modal="true" aria-label="{% if page_lang == 'ko' %}사이트 검색{% else %}Site search{% endif %}">
+      <div class="search-field-wrap">
+        <svg class="search-field-icon" viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="6.5"></circle><path d="m16 16 4.25 4.25"></path></svg>
+        <input class="search-field" data-search-input type="search" autocomplete="off" spellcheck="false" placeholder="{% if page_lang == 'ko' %}글 검색…{% else %}Search posts…{% endif %}" aria-label="{% if page_lang == 'ko' %}글 검색{% else %}Search posts{% endif %}">
+        <button class="search-close" type="button" data-search-close aria-label="{% if page_lang == 'ko' %}검색 닫기{% else %}Close search{% endif %}">×</button>
+      </div>
+      <div class="search-results" data-search-results>
+        <p class="search-hint">{% if page_lang == 'ko' %}제목, 설명, 카테고리에서 검색합니다.{% else %}Search titles, descriptions, and categories.{% endif %}</p>
+      </div>
+    </div>
+  </div>
+
   <script src="{{ '/assets/js/theme.js' | relative_url }}"></script>
+  <script src="{{ '/assets/js/ui.js' | relative_url }}"></script>
 </body>
 </html>
