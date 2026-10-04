@@ -24,15 +24,17 @@ permalink: /ko/
     {% assign has_korean = false %}
     {% for post in site.posts %}
       {% if post.lang == 'ko' %}
-        {% assign has_korean = true %}
-        <article class="post-row">
-          <time datetime="{{ post.date | date_to_xmlschema }}">{{ post.date | date: "%Y.%m.%d" }}</time>
-          <div class="post-copy">
-            <h3><a href="{{ post.url | relative_url }}">{{ post.title }}</a></h3>
-            <p>{{ post.description | default: post.excerpt | strip_html | truncate: 180 }}</p>
-            <a class="read-more" href="{{ post.url | relative_url }}">계속 읽기 »</a>
-          </div>
-        </article>
+        {% unless post.template_page %}
+          {% assign has_korean = true %}
+          <article class="post-row">
+            <time datetime="{{ post.date | date_to_xmlschema }}">{{ post.date | date: "%Y.%m.%d" }}</time>
+            <div class="post-copy">
+              <h3><a href="{{ post.url | relative_url }}">{{ post.title }}</a></h3>
+              <p>{{ post.description | default: post.excerpt | strip_html | truncate: 180 }}</p>
+              <a class="read-more" href="{{ post.url | relative_url }}">계속 읽기 »</a>
+            </div>
+          </article>
+        {% endunless %}
       {% endif %}
     {% endfor %}
     {% unless has_korean %}<p class="empty-state">아직 글이 없습니다.</p>{% endunless %}
