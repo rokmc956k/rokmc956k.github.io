@@ -1,0 +1,288 @@
+---
+layout: post
+title: "Grasp Theory for Robotic Grasping"
+description: "A practical theory guide to robotic grasping: contact kinematics, friction cones, contact models, force closure, grasp matrices, hand Jacobians, internal forces, and grasp quality metrics."
+date: 2026-10-04 14:20:00 -0400
+lang: en
+categories:
+  - Grasping & Manipulation
+  - Robotics
+tags:
+  - grasping
+  - manipulation
+  - force-closure
+  - grasp-matrix
+  - friction-cone
+  - grasp-quality
+math: true
+---
+
+<style>
+.grasp-note{border-left:3px solid var(--link);padding:14px 18px;margin:26px 0;background:var(--surface)}
+.grasp-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px;margin:24px 0}.grasp-card{border:1px solid var(--line);border-radius:10px;padding:16px;background:var(--surface)}
+.grasp-card h4{margin:.1rem 0 .4rem}.grasp-table{overflow-x:auto;margin:22px 0}.grasp-table table{min-width:690px}.grasp-svg{width:100%;height:auto;border:1px solid var(--line);border-radius:10px;background:var(--surface);margin:20px 0}.grasp-caption{font:.82rem/1.5 var(--sans);color:var(--muted);margin-top:-10px;margin-bottom:26px}.paper-links{display:flex;flex-wrap:wrap;gap:10px;margin:18px 0 30px}.paper-links a{border:1px solid var(--line);border-radius:999px;padding:7px 12px;font:600 .84rem var(--sans)}
+@media(max-width:700px){.grasp-grid{grid-template-columns:1fr}}
+</style>
+
+<p class="eyebrow">Theory · Grasping & Manipulation</p>
+
+<div class="paper-links">
+  <a href="https://joel-baptista.github.io/phd-weekly-report/posts/grasp_theory/" target="_blank" rel="noopener">Reference article ↗</a>
+</div>
+
+<p>
+Robotic grasping is fundamentally a problem of <strong>constraining object motion with contacts</strong>. A grasp is not defined only by finger positions; it is defined by which forces and moments the contacts can transmit, how those contact forces map to object wrench, and whether the robot joints can physically generate the required forces.
+</p>
+
+<div class="grasp-note"><strong>Core idea:</strong> contact geometry defines feasible motion, friction defines feasible contact forces, the grasp matrix maps those forces into object wrench, and grasp-quality metrics summarize how robustly the grasp can reject disturbances.</div>
+
+<h2>1. Linear-algebra foundations</h2>
+
+<p>Many grasping conditions are easiest to understand through span, positive span, convex hull, null spaces, and pseudoinverses.</p>
+
+<p>For a set of vectors $A=\{v_1,\ldots,v_m\}$:</p>
+
+<p>\[
+\operatorname{span}(A)=\left\{\sum_i \alpha_i v_i\;\middle|\;\alpha_i\in\mathbb{R}\right\}
+\]</p>
+
+<p>\[
+\operatorname{pos}(A)=\left\{\sum_i \alpha_i v_i\;\middle|\;\alpha_i\ge 0\right\}
+\]</p>
+
+<p>\[
+\operatorname{conv}(A)=\left\{\sum_i \alpha_i v_i\;\middle|\;\alpha_i\ge0,\ \sum_i\alpha_i=1\right\}.
+\]</p>
+
+<p>The positive span is especially important because unilateral contacts can push but cannot pull. A generic spatial object wrench lies in $\mathbb{R}^6$, so a closure test is naturally expressed in six-dimensional wrench space.</p>
+
+<h2>2. Twist, wrench, and contact frames</h2>
+
+<p>An object twist combines translational and angular velocity:</p>
+
+<p>\[
+\mathcal{V}=\begin{bmatrix}v\\\omega\end{bmatrix}\in\mathbb{R}^6,
+\]</p>
+
+<p>while a wrench combines force and moment:</p>
+
+<p>\[
+\mathcal{W}=\begin{bmatrix}f\\m\end{bmatrix}\in\mathbb{R}^6.
+\]</p>
+
+<p>At each contact, it is useful to define a local frame whose normal axis points into the object and whose two tangent axes span the contact plane. Expressing friction and contact constraints in this local frame makes the equations much cleaner.</p>
+
+<svg class="grasp-svg" viewBox="0 0 1000 380" role="img" aria-label="Contact frame and friction cone">
+  <defs><marker id="ga" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto"><path d="M0,0 L0,6 L9,3 z" fill="currentColor"/></marker></defs>
+  <rect x="120" y="210" width="760" height="95" rx="16" fill="none" stroke="currentColor" stroke-opacity=".35" stroke-width="3"/>
+  <circle cx="500" cy="210" r="8" fill="var(--link)"/>
+  <g fill="none" stroke="currentColor" stroke-width="3" marker-end="url(#ga)">
+    <line x1="500" y1="210" x2="500" y2="80"/><line x1="500" y1="210" x2="670" y2="210"/>
+  </g>
+  <text x="516" y="92" fill="currentColor" font-size="24" font-family="ui-sans-serif,system-ui">normal n</text>
+  <text x="650" y="196" fill="currentColor" font-size="24" font-family="ui-sans-serif,system-ui">tangent t</text>
+  <path d="M500 90 L420 205 M500 90 L580 205" fill="none" stroke="var(--link)" stroke-width="3" stroke-dasharray="7 7"/>
+  <text x="500" y="55" text-anchor="middle" fill="currentColor" font-size="22" font-family="ui-sans-serif,system-ui">friction cone</text>
+</svg>
+<div class="grasp-caption">Conceptual contact-frame diagram. Friction limits the tangential force that can accompany a positive normal force.</div>
+
+<h2>3. Contact kinematics: breaking, sliding, and rolling</h2>
+
+<p>If two bodies touch at a point, the impenetrability constraint requires non-negative relative normal velocity:</p>
+
+<p>\[
+\hat n^T(\dot p_A-\dot p_B)\ge0.
+\]</p>
+
+<p>This leads to three intuitive modes:</p>
+
+<div class="grasp-grid">
+  <div class="grasp-card"><h4>Breaking</h4><p>The relative normal velocity separates the bodies.</p></div>
+  <div class="grasp-card"><h4>Sliding</h4><p>Normal separation is zero, but tangential relative motion remains.</p></div>
+  <div class="grasp-card"><h4>Rolling / sticking</h4><p>The relative contact-point velocity is zero.</p></div>
+  <div class="grasp-card"><h4>Multiple contacts</h4><p>The feasible object-twist set is the intersection of all individual contact constraints.</p></div>
+</div>
+
+<p>First-order contact analysis uses only the local contact normal. It is efficient but ignores curvature, so some geometrically stable grasps are visible only in higher-order analysis.</p>
+
+<h2>4. Friction cone and contact models</h2>
+
+<p>With Coulomb friction, a sticking point contact must satisfy</p>
+
+<p>\[
+\|f_t\|\le \mu f_n,\qquad f_n\ge0.
+\]</p>
+
+<p>Thus the feasible contact-force set forms a cone:</p>
+
+<p>\[
+\mathcal{F}=\{f\mid f_n\ge0,\ \sqrt{f_{t1}^2+f_{t2}^2}\le\mu f_n\}.
+\]</p>
+
+<p>For numerical grasp analysis, this continuous cone is usually approximated by a polyhedral cone with a finite number of edge vectors. More edges give a better approximation but increase the cost of convex-hull and optimization operations.</p>
+
+<div class="grasp-table"><table>
+<thead><tr><th>Contact model</th><th>Transmissible quantity</th><th>Typical interpretation</th></tr></thead>
+<tbody>
+<tr><td>Frictionless point</td><td>Normal force only</td><td>Simplest theoretical model</td></tr>
+<tr><td>Hard finger</td><td>Normal + tangential force</td><td>Point contact with friction</td></tr>
+<tr><td>Soft finger</td><td>Force + torsional moment about contact normal</td><td>Finite contact patch / compliant fingertip</td></tr>
+</tbody></table></div>
+
+<h2>5. Form closure vs. force closure</h2>
+
+<p><strong>Form closure</strong> immobilizes the object through geometry alone, without relying on friction. In first-order form closure, the only feasible object twist is zero. Equivalently, the contact wrenches must positively span the wrench space.</p>
+
+<p>For spatial motion this is a six-dimensional condition. A necessary generic lower bound is therefore seven unilateral wrench generators to positively span $\mathbb{R}^6$.</p>
+
+<p><strong>Force closure</strong> allows frictional contact forces. A grasp achieves force closure when feasible contact wrenches can counter arbitrary external object wrenches. In practice, this means the origin lies strictly inside the convex set generated by the admissible contact wrench cones, subject to the friction model.</p>
+
+<div class="grasp-note"><strong>Important nuance:</strong> a non-empty null space of the grasp matrix is useful because it enables internal squeezing forces, but $\mathcal{N}(G)\neq\varnothing$ alone is not a sufficient force-closure test. Rank, unilateral-force constraints, friction cones, and actuator feasibility also matter.</div>
+
+<h2>6. Grasp matrix</h2>
+
+<p>Let $\lambda$ collect all admissible contact-force coordinates. The grasp matrix $G$ maps them to the net wrench applied to the object:</p>
+
+<p>\[
+\mathcal{W}=G\lambda.
+\]</p>
+
+<p>For a contact at position $r_i$ relative to the object reference frame, a force $f_i$ contributes</p>
+
+<p>\[
+\mathcal{W}_i=
+\begin{bmatrix}
+f_i\\r_i\times f_i
+\end{bmatrix}.
+\]</p>
+
+<p>Stacking the individual mappings yields $G$. This matrix is central because almost every classical grasp metric is ultimately derived from either its geometry or the convex wrench set generated through it.</p>
+
+<svg class="grasp-svg" viewBox="0 0 1100 320" role="img" aria-label="Grasp matrix mapping">
+  <g font-family="ui-sans-serif,system-ui" fill="currentColor">
+    <rect x="60" y="100" width="240" height="110" rx="14" fill="none" stroke="currentColor" stroke-opacity=".4" stroke-width="2"/>
+    <text x="180" y="145" text-anchor="middle" font-size="24" font-weight="700">Contact forces</text><text x="180" y="180" text-anchor="middle" font-size="24">λ</text>
+    <rect x="430" y="90" width="240" height="130" rx="14" fill="none" stroke="var(--link)" stroke-width="3"/>
+    <text x="550" y="145" text-anchor="middle" font-size="25" font-weight="700">Grasp Matrix</text><text x="550" y="184" text-anchor="middle" font-size="25">G</text>
+    <rect x="800" y="100" width="240" height="110" rx="14" fill="none" stroke="currentColor" stroke-opacity=".4" stroke-width="2"/>
+    <text x="920" y="145" text-anchor="middle" font-size="24" font-weight="700">Object wrench</text><text x="920" y="180" text-anchor="middle" font-size="24">W</text>
+  </g>
+  <g stroke="currentColor" stroke-width="3" fill="none"><line x1="300" y1="155" x2="430" y2="155"/><line x1="670" y1="155" x2="800" y2="155"/></g>
+</svg>
+
+<h2>7. Hand Jacobian and contact compatibility</h2>
+
+<p>The hand Jacobian maps joint velocity to contact-point twist:</p>
+
+<p>\[
+\mathcal{V}_{c,hand}=J\dot q.
+\]</p>
+
+<p>The object motion generates corresponding contact-point motion through the transpose grasp mapping:</p>
+
+<p>\[
+\mathcal{V}_{c,obj}=G^T\mathcal{V}_{obj}.
+\]</p>
+
+<p>For sticking contacts, kinematic compatibility requires</p>
+
+<p>\[
+J\dot q=G^T\mathcal{V}_{obj}.
+\]</p>
+
+<p>On the force side, virtual work gives the hand equilibrium relation</p>
+
+<p>\[
+\tau=J^T\lambda.
+\]</p>
+
+<p>This equation is the missing link between geometric grasp analysis and the actual robot: a wrench may be feasible in contact space but still impossible if the joint torque limits cannot produce the needed $\lambda$.</p>
+
+<h2>8. Internal forces</h2>
+
+<p>Suppose an external wrench $\mathcal{W}_{ext}$ must be balanced:</p>
+
+<p>\[
+G\lambda=-\mathcal{W}_{ext}.
+\]</p>
+
+<p>A general solution can be written with a pseudoinverse:</p>
+
+<p>\[
+\lambda=-G^\#\mathcal{W}_{ext}+N_G\gamma,
+\]</p>
+
+<p>where the columns of $N_G$ span $\mathcal{N}(G)$. The first term generates the wrench required to balance the disturbance. The second term changes contact forces without changing net object wrench; these are <strong>internal forces</strong>. Internal force is what allows a hand to squeeze an object more firmly while leaving the object static.</p>
+
+<h2>9. Grasp Wrench Space and the Ferrari-Canny $\epsilon$ metric</h2>
+
+<p>After discretizing each friction cone into boundary wrench generators, we can form a convex approximation of the set of wrenches the grasp can produce. This is the <strong>Grasp Wrench Space (GWS)</strong>.</p>
+
+<p>Under a common force-budget normalization:</p>
+
+<p>\[
+\mathcal{P}=\operatorname{conv}\left(\bigcup_{i,j}\mathcal{W}_{i,j}\right).
+\]</p>
+
+<p>The classic Ferrari-Canny metric measures the radius of the largest origin-centered ball fully contained in this set:</p>
+
+<p>\[
+Q_{\epsilon}=\min_{\mathcal{W}\in\partial\mathcal{P}}\|\mathcal{W}\|.
+\]</p>
+
+<p>A larger $Q_{\epsilon}$ means the grasp can reject a larger worst-case disturbance from any wrench direction. This is why the metric remains one of the most widely used classical grasp-quality measures.</p>
+
+<h2>10. Other useful grasp-quality metrics</h2>
+
+<div class="grasp-table"><table>
+<thead><tr><th>Metric</th><th>Definition</th><th>Interpretation</th></tr></thead>
+<tbody>
+<tr><td>GWS volume</td><td>$Q_V=\operatorname{Volume}(\mathcal{P})$</td><td>Overall wrench capability</td></tr>
+<tr><td>Minimum singular value</td><td>$Q_{\sigma}=\sigma_{min}(G)$</td><td>Weakest linear wrench direction</td></tr>
+<tr><td>Wrench ellipsoid volume</td><td>$\sqrt{\det(GG^T)}$</td><td>Global linearized capability</td></tr>
+<tr><td>Isotropy</td><td>$\sigma_{min}(G)/\sigma_{max}(G)$</td><td>Directional balance</td></tr>
+<tr><td>Centroid-COM distance</td><td>$\|c_{contact}-c_{COM}\|$</td><td>Heuristic robustness to gravity/inertia</td></tr>
+</tbody></table></div>
+
+<p>Singular-value metrics are useful, but they do not encode unilateral contact or Coulomb friction by themselves. They should therefore be treated as local algebraic indicators rather than complete force-closure tests.</p>
+
+<h2>11. Precision grasp vs. power grasp</h2>
+
+<div class="grasp-grid">
+<div class="grasp-card"><h4>Precision grasp</h4><p>Primarily fingertip contacts. Lower contact count and higher dexterity; better suited to in-hand manipulation.</p></div>
+<div class="grasp-card"><h4>Power grasp</h4><p>Uses fingers, links, and often the palm. More contact area and robustness, but contact modeling and force distribution are more complex.</p></div>
+</div>
+
+<h2>12. Practical checklist for grasp evaluation</h2>
+
+<ol>
+<li>Define object frame and all contact frames.</li>
+<li>Select contact model: frictionless, hard finger, or soft finger.</li>
+<li>Choose friction coefficients and discretize friction cones.</li>
+<li>Build the grasp matrix $G$.</li>
+<li>Check wrench-space rank and force-closure feasibility.</li>
+<li>Include actuator limits through $\tau=J^T\lambda$ if physical realizability matters.</li>
+<li>Construct the GWS and compute $Q_{\epsilon}$ for robust grasp ranking.</li>
+<li>Use secondary metrics such as GWS volume, isotropy, or COM distance for tie-breaking and task-specific preferences.</li>
+</ol>
+
+<h2>Takeaways</h2>
+
+<ul>
+<li><strong>Geometry</strong> tells us which motions contacts prevent.</li>
+<li><strong>Friction</strong> determines which contact forces are physically admissible.</li>
+<li><strong>The grasp matrix</strong> converts local contact forces into global object wrench.</li>
+<li><strong>The hand Jacobian</strong> connects those contact forces and motions back to robot joints.</li>
+<li><strong>Force closure</strong> is the key feasibility concept for robust grasping.</li>
+<li><strong>The Ferrari-Canny $\epsilon$ metric</strong> is a strong classical choice when a single scalar quality score is needed.</li>
+</ul>
+
+<h2>References</h2>
+
+<ol>
+<li>Joel Baptista, <a href="https://joel-baptista.github.io/phd-weekly-report/posts/grasp_theory/" target="_blank" rel="noopener">“Grasping Theory,” Joel's PhD Blog</a>. This post was used as the primary structural reference for this summary.</li>
+<li>Kevin M. Lynch and Frank C. Park, <em>Modern Robotics</em>, Chapter 12: Grasping and Manipulation.</li>
+<li>Máximo A. Roa and Raúl Suárez, “Grasp Quality Measures: Review and Performance,” <em>Autonomous Robots</em>, 2015.</li>
+<li>C. Ferrari and J. Canny, “Planning Optimal Grasps,” IEEE ICRA, 1992.</li>
+<li>Andrew T. Miller and Peter K. Allen, “GraspIt!: A Versatile Simulator for Grasp Analysis,” 2000.</li>
+</ol>
