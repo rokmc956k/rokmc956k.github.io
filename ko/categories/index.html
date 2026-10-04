@@ -4,27 +4,50 @@ title: 카테고리
 lang: ko
 permalink: /ko/categories/
 ---
-<section class="taxonomy-page">
+<style>
+.category-tree{max-width:860px;margin:0 auto}.category-tree h1{font-size:clamp(2.6rem,6vw,4.6rem);line-height:1;margin:.15em 0 .25em}.category-tree .taxonomy-intro{margin:0 0 34px;color:var(--muted);font-size:1.08rem}.folder-tree{border-top:1px solid var(--line)}.folder-node{border-bottom:1px solid var(--line)}.folder-node>summary,.subfolder-node>summary{list-style:none;cursor:pointer;display:flex;align-items:center;justify-content:space-between;font-family:var(--sans)}.folder-node>summary::-webkit-details-marker,.subfolder-node>summary::-webkit-details-marker{display:none}.folder-node>summary{padding:18px 4px;font-weight:700;font-size:1.13rem}.subfolder-node{margin:0 0 8px 22px;border-left:1px solid var(--line);padding-left:14px}.subfolder-node>summary{padding:10px 4px;font-weight:650;font-size:.98rem}.folder-label{display:flex;align-items:center;gap:9px}.folder-label:before{content:'▸';color:var(--muted);font-size:.8rem}.folder-node[open]>.folder-label:before,.subfolder-node[open]>.folder-label:before{content:'▾'}.folder-children{padding:0 0 14px}.folder-posts{padding:2px 0 8px}.folder-post{display:grid;grid-template-columns:1fr auto;gap:20px;align-items:center;padding:9px 10px;border-radius:7px;color:var(--text);margin-left:20px}.folder-post:hover{text-decoration:none;background:color-mix(in srgb,var(--link) 7%,transparent);color:var(--link)}.folder-post time{font:.76rem/1 var(--sans);color:var(--muted)}.folder-empty{margin:5px 0 8px 20px;color:var(--muted);font:.82rem/1.4 var(--sans)}@media(max-width:700px){.subfolder-node{margin-left:12px}.folder-post{grid-template-columns:1fr;gap:4px;margin-left:10px}}
+</style>
+<section class="category-tree">
   <p class="eyebrow">Browse</p>
   <h1>카테고리</h1>
-  <p class="taxonomy-intro">주제별로 연구 노트와 기술 리뷰를 찾아볼 수 있습니다.</p>
+  <p class="taxonomy-intro">포스트를 폴더 트리 형태로 탐색합니다.</p>
 
-  <div class="taxonomy-list">
-    {% assign sorted_categories = site.categories | sort %}
-    {% for category in sorted_categories %}
-      {% assign category_name = category[0] %}
-      {% assign category_posts = category[1] %}
-      <details class="taxonomy-group" open>
-        <summary>{{ category_name }}</summary>
-        <div class="taxonomy-posts">
-          {% for post in category_posts %}
+  <div class="folder-tree">
+    {% for group in site.data.category_tree %}
+      <details class="folder-node" open>
+        <summary><span class="folder-label">{{ group.name }}</span></summary>
+        <div class="folder-children">
+          {% assign root_has_posts = false %}
+          {% for post in site.posts %}
+            {% assign assignment = site.data.category_assignments[post.url] %}
             {% if post.lang == 'ko' %}
-              <a href="{{ post.url | relative_url }}">
-                <span>{{ post.title }}</span>
-                <time>{{ post.date | date: "%Y.%m.%d" }}</time>
-              </a>
+              {% if assignment and assignment.size == 1 and assignment[0] == group.name %}
+                {% assign root_has_posts = true %}
+                <a class="folder-post" href="{{ post.url | relative_url }}"><span>{{ post.title }}</span><time>{{ post.date | date: "%Y.%m.%d" }}</time></a>
+              {% endif %}
             {% endif %}
           {% endfor %}
+
+          {% for child in group.children %}
+            <details class="subfolder-node" open>
+              <summary><span class="folder-label">{{ child }}</span></summary>
+              <div class="folder-posts">
+                {% assign child_has_posts = false %}
+                {% for post in site.posts %}
+                  {% assign assignment = site.data.category_assignments[post.url] %}
+                  {% if post.lang == 'ko' %}
+                    {% if assignment and assignment[0] == group.name and assignment[1] == child %}
+                      {% assign child_has_posts = true %}
+                      <a class="folder-post" href="{{ post.url | relative_url }}"><span>{{ post.title }}</span><time>{{ post.date | date: "%Y.%m.%d" }}</time></a>
+                    {% endif %}
+                  {% endif %}
+                {% endfor %}
+                {% unless child_has_posts %}<p class="folder-empty">아직 글이 없습니다.</p>{% endunless %}
+              </div>
+            </details>
+          {% endfor %}
+
+          {% if group.children == empty and root_has_posts == false %}<p class="folder-empty">아직 글이 없습니다.</p>{% endif %}
         </div>
       </details>
     {% endfor %}
