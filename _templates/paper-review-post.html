@@ -1,0 +1,102 @@
+---
+layout: post
+title: "[Paper Name]: [Short Technical Subtitle]"
+description: "[One-sentence technical summary of the paper.]"
+date: YYYY-MM-DD HH:MM:SS -0400
+lang: en
+paper_review: true
+paper_topic: "[Short Technical Topic]"
+paper_year: "[YYYY]"
+project_url: "[Official project page URL]"
+arxiv_url: "[arXiv abstract URL]"
+html_paper_url: "[arXiv HTML URL if available]"
+code_url: "[Official GitHub repository if available]"
+categories:
+  - [Primary Domain]
+  - [Secondary Domain]
+tags:
+  - [keyword-1]
+  - [keyword-2]
+math: true
+---
+
+<p><strong>[Paper Name]</strong> [In 2–3 paragraphs: what problem does it solve, what is the central idea, and why is the result important?]</p>
+
+<div class="paper-note"><strong>Core idea:</strong> [One or two sentences capturing the main technical move.]</div>
+
+<!-- Optional: keep only if the paper has memorable quantitative claims. -->
+<div class="paper-kpi-grid">
+  <div class="paper-kpi-card"><strong>[Metric]</strong><span>[Meaning]</span></div>
+  <div class="paper-kpi-card"><strong>[Scale]</strong><span>[Meaning]</span></div>
+  <div class="paper-kpi-card"><strong>[Result]</strong><span>[Meaning]</span></div>
+  <div class="paper-kpi-card"><strong>[Hardware]</strong><span>[Meaning]</span></div>
+</div>
+
+<h2>1. Problem and motivation</h2>
+<p>[Why the problem is difficult. What fails in prior work? State key assumptions.]</p>
+
+<h2>2. Core abstraction / architecture</h2>
+<p>[Explain the main representation or system decomposition before equations.]</p>
+
+<figure class="paper-figure">
+  <div class="paper-figure-placeholder">[Architecture / data flow / control hierarchy diagram]</div>
+  <figcaption>[What should the reader notice? Add source attribution if adapted.]</figcaption>
+</figure>
+
+<h2>3. Mathematical formulation</h2>
+<p>[Introduce only the equations needed to understand the method. Define symbols and explain physical/algorithmic meaning.]</p>
+
+<p>$$
+[\text{key equation}]
+$$</p>
+
+<h3>3.1 Key mechanism</h3>
+<p>[Break complicated mechanisms into H3 subsections.]</p>
+
+<h2>4. Training / optimization / system pipeline</h2>
+<p>[Algorithm, curriculum, losses/rewards, data flow, simulator, initialization, parallelism, compute, frozen vs trainable components.]</p>
+
+<div class="paper-note"><strong>Implementation detail worth remembering:</strong> [One practical choice that matters for reproduction or adaptation.]</div>
+
+<h2>5. Experiments and results</h2>
+<div class="paper-table-wrap">
+<table>
+  <thead><tr><th>Method / setting</th><th>Main metric</th><th>Secondary metric</th><th>Interpretation</th></tr></thead>
+  <tbody>
+    <tr><td>Baseline</td><td>[—]</td><td>[—]</td><td>[What the baseline shows]</td></tr>
+    <tr><td>Proposed</td><td><strong>[—]</strong></td><td>[—]</td><td>[Why the improvement matters]</td></tr>
+  </tbody>
+</table>
+</div>
+
+<h3>5.1 Generalization / ablation / scaling</h3>
+<p>[Use the experiment that best tests the paper's central claim.]</p>
+
+<h2>6. Why this paper matters</h2>
+<p>[Your analysis: capability change, relaxed assumptions, relation to VLA/RL/humanoid/manipulation/sim-to-real.]</p>
+
+<h2>7. Limitations and open questions</h2>
+<ul>
+  <li><strong>Assumptions:</strong> [Required privileged information / fixed components / task structure]</li>
+  <li><strong>Evaluation:</strong> [Missing settings or benchmarks]</li>
+  <li><strong>Scalability:</strong> [What grows poorly]</li>
+  <li><strong>Real-world gap:</strong> [Simulation-only or limited hardware evidence]</li>
+  <li><strong>Research question:</strong> [Most useful next experiment]</li>
+</ul>
+
+<h2>8. Takeaways</h2>
+<ul class="paper-takeaways">
+  <li><strong>One-sentence thesis:</strong> [Main contribution]</li>
+  <li><strong>Most important mechanism:</strong> [Reusable idea]</li>
+  <li><strong>Strongest evidence:</strong> [Best supporting experiment]</li>
+  <li><strong>Main caveat:</strong> [Most important limitation]</li>
+</ul>
+
+<h2>9. References</h2>
+<ol>
+  <li>[Paper title, authors, venue/year]</li>
+  <li><a href="[Official project page URL]">Official project page</a>.</li>
+  <li><a href="[arXiv abstract URL]">arXiv abstract</a>.</li>
+  <li><a href="[arXiv HTML URL]">arXiv HTML paper</a>.</li>
+  <li>[Official code repository / conference page if available]</li>
+</ol>
