@@ -1,6 +1,7 @@
 ---
 layout: default
 title: Home
+lang: en
 ---
 <section class="hero">
   <p class="eyebrow">Robotics / Physical AI</p>
@@ -13,21 +14,24 @@ title: Home
 <section id="posts" class="posts-section">
   <div class="section-heading">
     <h2>Posts</h2>
-    <span>{{ site.posts | size }} articles</span>
+    <span>English articles</span>
   </div>
 
   <div class="post-list">
+    {% assign has_english = false %}
     {% for post in site.posts %}
-      <article class="post-row">
-        <time datetime="{{ post.date | date_to_xmlschema }}">{{ post.date | date: "%b %d, %Y" }}</time>
-        <div class="post-copy">
-          <h3><a href="{{ post.url | relative_url }}">{{ post.title }}</a></h3>
-          <p>{{ post.description | default: post.excerpt | strip_html | truncate: 180 }}</p>
-          <a class="read-more" href="{{ post.url | relative_url }}">Read more »</a>
-        </div>
-      </article>
-    {% else %}
-      <p class="empty-state">No posts yet.</p>
+      {% unless post.lang == 'ko' %}
+        {% assign has_english = true %}
+        <article class="post-row">
+          <time datetime="{{ post.date | date_to_xmlschema }}">{{ post.date | date: "%b %d, %Y" }}</time>
+          <div class="post-copy">
+            <h3><a href="{{ post.url | relative_url }}">{{ post.title }}</a></h3>
+            <p>{{ post.description | default: post.excerpt | strip_html | truncate: 180 }}</p>
+            <a class="read-more" href="{{ post.url | relative_url }}">Read more »</a>
+          </div>
+        </article>
+      {% endunless %}
     {% endfor %}
+    {% unless has_english %}<p class="empty-state">No posts yet.</p>{% endunless %}
   </div>
 </section>
