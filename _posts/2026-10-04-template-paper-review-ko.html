@@ -1,7 +1,7 @@
 ---
 layout: post
 title: "[Template] Paper Review"
-description: "향후 Paper Review 작성을 위한 표준 템플릿: 메타데이터, 핵심 아이디어, 수식, 구조, 실험, 해석, 한계와 references 작성 규칙."
+description: "향후 Paper Review 작성을 위한 표준 템플릿: 논문 이해, 방법, 실험, 재현성, 결과 타당성, 엔지니어링 시사점과 최종 판단."
 date: 2026-10-04 15:11:00 -0400
 lang: ko
 permalink: /ko/posts/template-paper-review/
@@ -18,12 +18,11 @@ math: true
 <p class="eyebrow">Template · Paper Review</p>
 
 <div class="paper-note">
-  <strong>목적.</strong> 이 페이지는 앞으로 작성할 Paper Review의 canonical template이다. InterEvolve와 decMHT 리뷰에서 사용한 장점을 합쳐, 핵심 주장 → 구조와 수식 → 학습/시스템 → 실험 → 해석 → 한계 → References 순서로 일관되게 작성한다.
+  <strong>목적.</strong> 이 페이지는 앞으로 작성할 Paper Review의 canonical template이다. InterEvolve와 decMHT 리뷰의 설명형 구조에, <strong>논문의 주장</strong>과 <strong>실제 공개된 증거가 뒷받침하는 범위</strong>를 분리해 평가하는 비판적 검토 구조를 결합한다.
 </div>
 
 <h2>1. 필수 front matter</h2>
-
-<p>새 Paper Review는 아래 메타데이터로 시작한다. 공통 post layout이 이 정보를 읽어 표준 Paper Review 헤더와 source link를 자동 생성한다.</p>
+<p>새 Paper Review는 아래 메타데이터로 시작한다. 공통 post layout이 표준 Paper Review 헤더와 source link를 자동 생성한다.</p>
 
 <pre><code>---
 layout: post
@@ -49,25 +48,37 @@ math: true
 ---
 </code></pre>
 
-<p>상단 표시는 항상 아래 형식을 유지한다.</p>
-
 <div class="paper-template-preview">
   <p class="paper-review-kicker">Paper Review · Short Technical Topic · 2026</p>
-  <div class="paper-review-links">
-    <span>Project page ↗</span><span>arXiv ↗</span><span>HTML paper ↗</span>
-  </div>
+  <div class="paper-review-links"><span>Project page ↗</span><span>arXiv ↗</span><span>HTML paper ↗</span></div>
 </div>
 
-<h2>2. Opening: 두세 문단 안에 논문을 설명</h2>
+<h2>2. 리뷰 원칙</h2>
+<div class="paper-note"><strong>Claim ≠ Evidence.</strong> 저자들이 주장하는 contribution과 실제 실험·코드·데이터·하드웨어 결과가 입증하는 범위를 분리해서 작성한다.</div>
+<p>전체 리뷰는 다음 세 단계로 구성한다.</p>
+<ol>
+  <li><strong>논문 이해:</strong> bibliographic context, 연구 문제, contribution, method, training/inference pipeline.</li>
+  <li><strong>증거 검증:</strong> experiments, ablation, hidden assumptions, reproducibility, result validity.</li>
+  <li><strong>의미 판단:</strong> 연구적 영향, engineering takeaway, 재현 실험, related work, final verdict.</li>
+</ol>
 
-<p>첫 문단에서는 바로 세 가지를 답한다. <strong>어떤 문제를 푸는가, 핵심 아이디어는 무엇인가, 왜 결과가 중요한가?</strong> 구현 디테일이나 수식부터 시작하지 않는다. 독자는 notation을 보기 전에 논문의 thesis를 이해할 수 있어야 한다.</p>
+<h2>3. Bibliographic information</h2>
+<div class="paper-table-wrap"><table><tbody>
+<tr><th>Title</th><td>논문 전체 제목</td></tr>
+<tr><th>Authors / institution</th><td>저자 및 소속</td></tr>
+<tr><th>Venue / arXiv</th><td>학회/저널, arXiv ID</td></tr>
+<tr><th>Publication date</th><td>YYYY-MM-DD</td></tr>
+<tr><th>Paper</th><td>공식 PDF / publisher page</td></tr>
+<tr><th>Project / GitHub</th><td>공식 project page / repository</td></tr>
+<tr><th>Code / data license</th><td>라이선스, 접근 제한, 상업적 이용 관련 메모</td></tr>
+</tbody></table></div>
 
-<div class="paper-note"><strong>Core idea:</strong> 논문의 핵심 기술적 전환을 한두 문장으로 요약한다. 이 박스만 읽어도 논문의 요지를 이해할 수 있어야 한다.</div>
+<h2>4. One-paragraph summary</h2>
+<p>한 문단 안에서 <strong>무슨 문제를 풀고, 핵심 아이디어가 무엇이며, 기존 방법과 무엇이 달라졌고, 가장 강한 결과가 무엇인지</strong> 설명한다.</p>
+<div class="paper-note"><strong>Core idea:</strong> 핵심 기술적 전환을 한두 문장으로 요약한다.</div>
 
-<h2>3. 선택 사항: KPI snapshot</h2>
-
-<p>기억할 만한 실험 결과가 있다면 초반에 3–4개 정도만 보여준다. scale, success rate, model/data size, hardware transfer처럼 논문의 주장 이해에 직접 도움이 되는 수치만 사용한다.</p>
-
+<h2>5. 선택 사항: KPI snapshot</h2>
+<p>scale, performance, generalization, deployment를 이해하는 데 도움이 되는 3–4개의 기억할 만한 수치만 보여준다.</p>
 <div class="paper-kpi-grid">
   <div class="paper-kpi-card"><strong>[Metric]</strong><span>이 숫자가 의미하는 것</span></div>
   <div class="paper-kpi-card"><strong>[Scale]</strong><span>robots / tasks / data / model size</span></div>
@@ -75,92 +86,98 @@ math: true
   <div class="paper-kpi-card"><strong>[Hardware]</strong><span>실환경 플랫폼 또는 deployment</span></div>
 </div>
 
-<h2>4. Problem and motivation</h2>
-
-<p>왜 어려운 문제인지, 기존 접근에서 무엇이 깨지는지 설명한다. Robotics 논문에서는 observation/action space, contact 및 embodiment 제약, coordination assumption, sim-to-real gap 등을 명확히 적는다.</p>
-
-<h2>5. Core abstraction / architecture</h2>
-
-<p>수식보다 먼저 논문의 핵심 representation과 system decomposition을 설명한다. 구조가 복잡하면 원본 그림을 그대로 복사하기보다 이해하기 쉬운 reconstructed diagram을 우선한다.</p>
-
-<figure class="paper-figure">
-  <div class="paper-figure-placeholder">[Architecture / data flow / control hierarchy diagram]</div>
-  <figcaption>독자가 그림에서 무엇을 봐야 하는지 설명한다. 원본 figure를 사용하거나 변형했다면 source를 명시한다.</figcaption>
-</figure>
-
-<h2>6. Mathematical formulation</h2>
-
-<p>방법 이해에 필요한 수식만 포함한다. 기호를 정의하고, 식 다음 문단에서는 단순히 식을 반복하지 말고 <em>이 식이 왜 중요한지</em> 설명한다.</p>
-
-<p>예:</p>
-
-<p>$$
-\mathbf{y}=f_{\theta}(\mathbf{x}),
-$$</p>
-
-<p>$\mathbf{x}$는 state/observation, $f_\theta$는 learned 또는 optimized model, $\mathbf{y}$는 control/policy/task output이라고 설명하고 실제 system 의미와 연결한다.</p>
-
-<h3>6.1 Key mechanism</h3>
-
-<p>복잡한 방법은 H3로 쪼갠다. Contents panel이 H2/H3를 자동 수집하므로, subsection 제목 자체가 글의 navigation 역할을 하도록 구체적으로 작성한다.</p>
-
-<h2>7. Training / optimization / system pipeline</h2>
-
-<p>실제 recipe를 정리한다: algorithm, curriculum, losses/rewards, data flow, simulator, initialization, parallel environments, compute, fine-tuning stage, frozen/trainable component. 결과를 설명하는 중요한 선택을 중심으로 쓴다.</p>
-
-<div class="paper-note"><strong>Implementation detail worth remembering:</strong> 실제 재현이나 다른 프로젝트 적용 시 중요할 하나의 practical detail을 기록한다.</div>
-
-<h2>8. Experiments and results</h2>
-
-<p>핵심 비교가 바로 보이는 작은 표를 선호한다. 논문의 모든 숫자를 옮기지 말고 주장을 판단하는 데 필요한 결과만 추린다.</p>
-
-<div class="paper-table-wrap">
-<table>
-  <thead><tr><th>Method / setting</th><th>Main metric</th><th>Secondary metric</th><th>Interpretation</th></tr></thead>
-  <tbody>
-    <tr><td>Baseline</td><td>—</td><td>—</td><td>baseline이 보여주는 것</td></tr>
-    <tr><td>Proposed</td><td><strong>—</strong></td><td>—</td><td>향상이 왜 중요한가</td></tr>
-  </tbody>
-</table>
-</div>
-
-<h3>8.1 Generalization / ablation / scaling</h3>
-
-<p>논문의 중심 주장을 가장 강하게 검증하는 실험을 넣는다. unseen object, larger team size, new task, real hardware, ablation, robustness 등이 대표적이다. 과장하지 않도록 evaluation 조건도 함께 적는다.</p>
-
-<h2>9. Why this paper matters</h2>
-
-<p>단순 요약이 아니라 해석을 적는 부분이다. 어떤 capability 또는 연구 방향을 바꾸는지, 어떤 assumption을 줄였는지, VLA/RL/humanoid/manipulation/sim-to-real 맥락에서 어디에 위치하는지 설명한다.</p>
-
-<h2>10. Limitations and open questions</h2>
-
+<h2>6. Research problem</h2>
 <ul>
-  <li><strong>Assumptions:</strong> privileged information, frozen controller, simulator, object model, task structure 의존성</li>
-  <li><strong>Evaluation:</strong> 아직 빠진 조건이나 benchmark</li>
-  <li><strong>Scalability:</strong> task/robot/data/compute 증가 시 문제</li>
-  <li><strong>Real-world gap:</strong> simulation-only 결과</li>
-  <li><strong>Research question:</strong> 다음으로 가장 가치 있는 실험</li>
+  <li><strong>기존 방법의 한계:</strong> 무엇을 처리하지 못하는가.</li>
+  <li><strong>연구 질문:</strong> 논문이 직접 답하려는 질문은 무엇인가.</li>
+  <li><strong>Task assumptions:</strong> observation/action, embodiment, supervision, simulator, object model, coordination assumption 등을 명시한다.</li>
 </ul>
 
-<h2>11. Takeaways</h2>
+<h2>7. Claimed contributions</h2>
+<ol><li>저자가 주장하는 contribution 1</li><li>contribution 2</li><li>contribution 3</li></ol>
+<p>이 섹션에서는 저자의 주장을 있는 그대로 정리하고 판단은 뒤의 <em>Result validity</em>에서 한다.</p>
 
+<h2>8. Method</h2>
+<h3>8.1 Architecture / core abstraction</h3>
+<p>수식보다 먼저 system decomposition 또는 representation을 설명한다.</p>
+<figure class="paper-figure"><div class="paper-figure-placeholder">[Architecture / data flow / control hierarchy diagram]</div><figcaption>독자가 무엇을 봐야 하는지 설명하고 adapted/reproduced figure라면 source를 명시한다.</figcaption></figure>
+
+<h3>8.2 Inputs / outputs</h3>
+<div class="paper-table-wrap"><table><thead><tr><th>Component</th><th>Input</th><th>Output</th><th>Role</th></tr></thead><tbody><tr><td>[Module]</td><td>[Observation / state / tokens]</td><td>[Action / latent / command]</td><td>[기능]</td></tr></tbody></table></div>
+
+<h3>8.3 Objective functions / reward / optimization target</h3>
+<p>방법 이해에 필요한 핵심 수식만 포함한다.</p>
+<p>$$\mathcal{L}=\cdots$$</p>
+<p><strong>변수 설명:</strong> 주요 기호를 정의하고 objective가 실제 system behavior에 어떤 영향을 주는지 연결한다.</p>
+
+<h3>8.4 Dataset and training</h3>
+<p>dataset, simulator, collection procedure, initialization, algorithm, curriculum, losses/rewards, compute, parallelism, fine-tuning stage, frozen/trainable component를 기록한다.</p>
+<div class="paper-note"><strong>Implementation detail worth remembering:</strong> 재현 시 가장 중요할 practical detail을 하나 기록한다.</div>
+
+<h3>8.5 Inference procedure</h3>
+<p>runtime flow를 단계별로 적고 deployment 시 실제로 사용 가능한 정보와 online component를 명확히 한다.</p>
+
+<h2>9. Experiments and results</h2>
+<p>중심 주장을 판단하는 데 필요한 최소한의 결과만 추린다. simulation-only evidence, real-world evidence, author-defined internal benchmark를 구분한다.</p>
+<div class="paper-table-wrap"><table><thead><tr><th>Benchmark / robot</th><th>Split / setting</th><th>Metric</th><th>Baseline</th><th>Proposed</th><th>Notes</th></tr></thead><tbody><tr><td>[Benchmark]</td><td>[Setting]</td><td>[Metric]</td><td>—</td><td><strong>—</strong></td><td>[해석 / caveat]</td></tr></tbody></table></div>
+
+<h3>9.1 Generalization / ablation / scaling</h3>
+<p>unseen object, larger team size, new task, real hardware, robustness, ablation 등 핵심 mechanism을 가장 직접적으로 검증하는 실험을 포함한다.</p>
+
+<h2>10. Critical review</h2>
+<h3>10.1 Strengths</h3>
+<ul><li>강한 technical idea</li><li>강한 experimental evidence</li><li>유용한 engineering/research property</li></ul>
+<h3>10.2 Weaknesses</h3>
+<ul><li>methodological limitation</li><li>evaluation limitation</li><li>deployment/scalability limitation</li></ul>
+<h3>10.3 Hidden assumptions</h3>
+<ul><li>privileged state / calibration / object model / frozen controller / known task structure</li><li>reported benchmark 밖에서는 성립하지 않을 수 있는 assumption</li></ul>
+
+<h2>11. Reproducibility assessment</h2>
+<div class="paper-table-wrap"><table><thead><tr><th>Item</th><th>Status</th><th>Notes</th></tr></thead><tbody>
+<tr><td>Code completeness</td><td>Good / Partial / Missing</td><td>공개 범위</td></tr>
+<tr><td>Checkpoints</td><td>Available / Missing</td><td>공개된 모델</td></tr>
+<tr><td>Dataset availability</td><td>Available / Restricted / Missing</td><td>license / access</td></tr>
+<tr><td>Hyperparameters</td><td>Complete / Partial</td><td>누락 값</td></tr>
+<tr><td>Hardware / compute cost</td><td>Known / Estimated / Unknown</td><td>GPU / robot / training time</td></tr>
+<tr><td>Missing implementation details</td><td>Low / Medium / High risk</td><td>재현을 막는 요소</td></tr>
+</tbody></table></div>
+
+<h2>12. Result validity</h2>
+<ul>
+  <li><strong>비교 조건의 공정성:</strong> baseline과 proposed가 동일 조건에서 평가됐는가?</li>
+  <li><strong>통계:</strong> sample count, variance, confidence interval, significance가 충분한가?</li>
+  <li><strong>Sim / real gap:</strong> 어떤 claim이 real hardware에서 검증됐는가?</li>
+  <li><strong>Benchmark independence:</strong> public/standard benchmark인지 authors/company 자체 benchmark인지 구분한다.</li>
+  <li><strong>Metric validity:</strong> metric이 실제 task success나 deployment usefulness를 대표하는가?</li>
+  <li><strong>Claim-to-evidence match:</strong> 어떤 claim이 strong / partial / speculative인지 구분한다.</li>
+</ul>
+
+<h2>13. Why this paper matters</h2>
+<p>어떤 capability 또는 연구 방향이 바뀌는지, 어떤 assumption이 줄었는지, VLA/RL/humanoid/manipulation/sim-to-real 맥락에서 어디에 위치하는지 설명한다.</p>
+
+<h2>14. Engineering takeaways</h2>
 <ul class="paper-takeaways">
-  <li><strong>One-sentence thesis:</strong> 논문의 기여를 한 문장으로.</li>
-  <li><strong>Most important mechanism:</strong> 다른 문제에도 재사용할 수 있는 핵심 아이디어.</li>
-  <li><strong>Strongest evidence:</strong> 주장을 가장 잘 뒷받침하는 실험.</li>
-  <li><strong>Main caveat:</strong> 결과 해석을 가장 크게 바꾸는 한계.</li>
+  <li><strong>Reusable idea:</strong> 다른 system에 가져갈 아이디어.</li>
+  <li><strong>Implementation lesson:</strong> 기억할 practical recipe.</li>
+  <li><strong>Deployment implication:</strong> 실제 robot/system 적용 시 달라지는 점.</li>
+  <li><strong>Main caveat:</strong> 반드시 고려해야 할 제한.</li>
 </ul>
 
-<h2>12. References</h2>
+<h2>15. Experiments to reproduce</h2>
+<ol><li>핵심 claim을 확인할 최소 재현 실험</li><li>central mechanism을 분리하기 위한 ablation</li><li>real-world 또는 OOD에서 해볼 가치가 있는 실험</li></ol>
 
-<ol>
-  <li>Paper title, authors, venue/year.</li>
-  <li><a href="#">Official project page</a>.</li>
-  <li><a href="#">arXiv abstract</a>.</li>
-  <li><a href="#">arXiv HTML paper</a>.</li>
-  <li>가능하면 official code repository / conference page.</li>
-</ol>
+<h2>16. Related papers</h2>
+<ul><li>가장 가까운 predecessor와 차이</li><li>competing approach</li><li>follow-up 또는 complementary work</li></ul>
 
-<div class="paper-note">
-  <strong>작성 원칙.</strong> 논문이 보고한 사실과 필자의 해석을 구분한다. 외부 figure와 수치에는 source를 명시하고, 가능하면 diagram을 재구성하며, 마지막에는 반드시 limitations를 적는다.
-</div>
+<h2>17. Final verdict</h2>
+<div class="paper-table-wrap"><table><tbody>
+<tr><th>Impact</th><td>High / Medium / Low — 이유</td></tr>
+<tr><th>Confidence</th><td>High / Medium / Low — evidence에 대한 신뢰도</td></tr>
+<tr><th>Usefulness for current work</th><td>High / Medium / Low — 구체적 활용 가능성</td></tr>
+</tbody></table></div>
+<p><strong>Bottom line:</strong> 논문이 확실히 입증한 것과 아직 입증되지 않은 것을 분리해서 한 문단으로 마무리한다.</p>
+
+<h2>18. References</h2>
+<ol><li>Paper title, authors, venue/year.</li><li>Official project page.</li><li>arXiv abstract.</li><li>arXiv HTML paper.</li><li>가능하면 official code repository / conference page.</li></ol>
+
+<div class="paper-note"><strong>작성 원칙.</strong> reported fact, author claim, 필자의 interpretation을 눈에 띄게 구분한다. source가 더 강한 결론을 지원하지 않으면 과장하지 말고 uncertainty를 명시한다.</div>
