@@ -1,0 +1,32 @@
+---
+layout: default
+title: 카테고리
+lang: ko
+permalink: /ko/categories/
+---
+<section class="taxonomy-page">
+  <p class="eyebrow">Browse</p>
+  <h1>카테고리</h1>
+  <p class="taxonomy-intro">주제별로 연구 노트와 기술 리뷰를 찾아볼 수 있습니다.</p>
+
+  <div class="taxonomy-list">
+    {% assign sorted_categories = site.categories | sort %}
+    {% for category in sorted_categories %}
+      {% assign category_name = category[0] %}
+      {% assign category_posts = category[1] %}
+      <details class="taxonomy-group" open>
+        <summary>{{ category_name }}</summary>
+        <div class="taxonomy-posts">
+          {% for post in category_posts %}
+            {% if post.lang == 'ko' %}
+              <a href="{{ post.url | relative_url }}">
+                <span>{{ post.title }}</span>
+                <time>{{ post.date | date: "%Y.%m.%d" }}</time>
+              </a>
+            {% endif %}
+          {% endfor %}
+        </div>
+      </details>
+    {% endfor %}
+  </div>
+</section>
