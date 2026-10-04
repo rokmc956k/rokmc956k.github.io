@@ -1,7 +1,7 @@
 ---
 layout: post
 title: "[Template] Paper Review"
-description: "Canonical template for future Paper Review posts: metadata, technical narrative, equations, architecture, experiments, interpretation, limitations, and references."
+description: "Canonical template for future Paper Review posts: paper understanding, method, experiments, reproducibility, result validity, engineering takeaways, and final verdict."
 date: 2026-10-04 15:10:00 -0400
 lang: en
 permalink: /posts/template-paper-review/
@@ -18,11 +18,10 @@ math: true
 <p class="eyebrow">Template · Paper Review</p>
 
 <div class="paper-note">
-  <strong>Purpose.</strong> This is the canonical structure for future Paper Review posts on this site. It combines the strongest patterns used in the InterEvolve and decMHT reviews: a concise thesis up front, visual/quantitative evidence, mathematical detail, implementation context, critical interpretation, and explicit limitations.
+  <strong>Purpose.</strong> This is the canonical structure for future Paper Review posts on this site. It combines the explanatory style of the InterEvolve and decMHT reviews with a stricter review framework that separates <strong>what the paper claims</strong> from <strong>what the released evidence actually supports</strong>.
 </div>
 
 <h2>1. Required front matter</h2>
-
 <p>Every new Paper Review should start with the following metadata. The shared post layout automatically renders the standardized source header from these fields.</p>
 
 <pre><code>---
@@ -48,25 +47,38 @@ math: true
 ---
 </code></pre>
 
-<p>The rendered paper header must remain consistent:</p>
-
 <div class="paper-template-preview">
   <p class="paper-review-kicker">Paper Review · Short Technical Topic · 2026</p>
-  <div class="paper-review-links">
-    <span>Project page ↗</span><span>arXiv ↗</span><span>HTML paper ↗</span>
-  </div>
+  <div class="paper-review-links"><span>Project page ↗</span><span>arXiv ↗</span><span>HTML paper ↗</span></div>
 </div>
 
-<h2>2. Opening: explain the paper in two or three paragraphs</h2>
+<h2>2. Review principle</h2>
+<div class="paper-note"><strong>Claim ≠ evidence.</strong> Keep the authors' claimed contributions separate from your own assessment of whether the experiments, released code, datasets, and hardware results actually support those claims.</div>
 
-<p>The first paragraphs should answer three questions immediately: <strong>what problem is being solved, what is the central idea, and why is the result interesting?</strong> Avoid beginning with implementation details. A reader should understand the paper's thesis before encountering notation.</p>
+<p>The review should follow three phases:</p>
+<ol>
+  <li><strong>Understand the paper:</strong> bibliographic context, problem, contributions, method, and training/inference pipeline.</li>
+  <li><strong>Check the evidence:</strong> experiments, ablations, hidden assumptions, reproducibility, and result validity.</li>
+  <li><strong>Decide what it means:</strong> research impact, engineering takeaways, reproduction experiments, related work, and final verdict.</li>
+</ol>
 
-<div class="paper-note"><strong>Core idea:</strong> summarize the paper's main technical move in one or two sentences. This box should be understandable even if the reader skips the rest of the article.</div>
+<h2>3. Bibliographic information</h2>
+<div class="paper-table-wrap"><table><tbody>
+<tr><th>Title</th><td>Full paper title</td></tr>
+<tr><th>Authors / institution</th><td>Authors and affiliations</td></tr>
+<tr><th>Venue / arXiv</th><td>Venue, arXiv ID</td></tr>
+<tr><th>Publication date</th><td>YYYY-MM-DD</td></tr>
+<tr><th>Paper</th><td>Official PDF / publisher page</td></tr>
+<tr><th>Project / GitHub</th><td>Official project page / repository</td></tr>
+<tr><th>Code / data license</th><td>License, access restrictions, commercial-use notes</td></tr>
+</tbody></table></div>
 
-<h2>3. Optional KPI snapshot</h2>
+<h2>4. One-paragraph summary</h2>
+<p>In one compact paragraph, answer: <strong>what problem is solved, what is the central idea, what changed versus prior work, and what is the strongest reported result?</strong></p>
+<div class="paper-note"><strong>Core idea:</strong> summarize the central technical move in one or two sentences.</div>
 
-<p>When the paper has a few memorable experimental claims, surface them early. Use only numbers that materially help the reader understand scale, performance, generalization, or deployment.</p>
-
+<h2>5. Optional KPI snapshot</h2>
+<p>Use 3–4 memorable numbers only when they help establish scale, performance, generalization, or deployment evidence.</p>
 <div class="paper-kpi-grid">
   <div class="paper-kpi-card"><strong>[Metric]</strong><span>What this number means</span></div>
   <div class="paper-kpi-card"><strong>[Scale]</strong><span>Robots / tasks / data / model size</span></div>
@@ -74,92 +86,98 @@ math: true
   <div class="paper-kpi-card"><strong>[Hardware]</strong><span>Real-world platform or deployment</span></div>
 </div>
 
-<h2>4. Problem and motivation</h2>
-
-<p>Describe why the problem is hard and what breaks in prior approaches. Make the baseline assumptions explicit. For robotics papers, this often means clarifying observation/action spaces, contact or embodiment constraints, coordination assumptions, and the gap between simulation and hardware.</p>
-
-<h2>5. Core abstraction / architecture</h2>
-
-<p>Introduce the paper's main representation or system decomposition before diving into equations. Prefer a reconstructed diagram when it communicates the architecture more clearly than prose.</p>
-
-<figure class="paper-figure">
-  <div class="paper-figure-placeholder">[Architecture / data flow / control hierarchy diagram]</div>
-  <figcaption>Explain what the reader should notice. If the figure is adapted or reproduced from the paper/project page, state the source explicitly.</figcaption>
-</figure>
-
-<h2>6. Mathematical formulation</h2>
-
-<p>Include only equations that help explain the method. Define every symbol that is necessary for understanding the argument and connect each equation back to its physical or algorithmic meaning.</p>
-
-<p>Example:</p>
-
-<p>$$
-\mathbf{y}=f_{\theta}(\mathbf{x}),
-$$</p>
-
-<p>where $\mathbf{x}$ is the relevant state/observation, $f_\theta$ is the learned or optimized model, and $\mathbf{y}$ is the control/policy/task output. The paragraph after an equation should explain <em>why this equation matters</em>, not merely restate it.</p>
-
-<h3>6.1 Key mechanism</h3>
-
-<p>Break complicated methods into H3 subsections. The Contents panel automatically includes H2 and H3 headings, so descriptive subsection names make long technical reviews much easier to navigate.</p>
-
-<h2>7. Training / optimization / system pipeline</h2>
-
-<p>Document the practical recipe: algorithm, curriculum, losses or rewards, data flow, simulator, model initialization, parallelism, compute, fine-tuning stages, and any frozen vs. trainable components. Highlight choices that explain the reported behavior.</p>
-
-<div class="paper-note"><strong>Implementation detail worth remembering:</strong> capture one practical choice that would matter if you attempted to reproduce or adapt the work.</div>
-
-<h2>8. Experiments and results</h2>
-
-<p>Use a compact table for the most decision-relevant results. Do not reproduce every number from the paper. Prefer a smaller table that makes the central comparison obvious.</p>
-
-<div class="paper-table-wrap">
-<table>
-  <thead><tr><th>Method / setting</th><th>Main metric</th><th>Secondary metric</th><th>Interpretation</th></tr></thead>
-  <tbody>
-    <tr><td>Baseline</td><td>—</td><td>—</td><td>What the baseline reveals</td></tr>
-    <tr><td>Proposed</td><td><strong>—</strong></td><td>—</td><td>Why the improvement matters</td></tr>
-  </tbody>
-</table>
-</div>
-
-<h3>8.1 Generalization / ablation / scaling</h3>
-
-<p>Include the experiment that best tests the paper's central claim: unseen objects, larger team sizes, new tasks, real hardware, ablations, or robustness. Report enough context to avoid overstating the result.</p>
-
-<h2>9. Why this paper matters</h2>
-
-<p>This section is analytical rather than descriptive. Explain what capability or research direction the paper changes, which assumptions it relaxes, and where it fits relative to VLA, RL, humanoid control, manipulation, sim-to-real, or other relevant areas.</p>
-
-<h2>10. Limitations and open questions</h2>
-
+<h2>6. Research problem</h2>
 <ul>
-  <li><strong>Assumptions:</strong> What privileged information, fixed controller, simulator, object model, or task structure is required?</li>
-  <li><strong>Evaluation:</strong> Which settings are still missing?</li>
-  <li><strong>Scalability:</strong> What grows poorly with tasks, robots, data, or compute?</li>
-  <li><strong>Real-world gap:</strong> Which results remain simulation-only?</li>
-  <li><strong>Research question:</strong> What would be the most useful next experiment?</li>
+  <li><strong>Prior limitation:</strong> what existing methods fail to handle.</li>
+  <li><strong>Research question:</strong> what the paper is explicitly trying to answer.</li>
+  <li><strong>Task assumptions:</strong> observations, actions, embodiment, supervision, simulator, object model, coordination assumptions, etc.</li>
 </ul>
 
-<h2>11. Takeaways</h2>
+<h2>7. Claimed contributions</h2>
+<ol><li>Claimed contribution 1</li><li>Claimed contribution 2</li><li>Claimed contribution 3</li></ol>
+<p>State the authors' claims faithfully here. Do not judge them yet; evaluate them later under <em>Result validity</em>.</p>
 
+<h2>8. Method</h2>
+<h3>8.1 Architecture / core abstraction</h3>
+<p>Introduce the system decomposition or representation before equations.</p>
+<figure class="paper-figure"><div class="paper-figure-placeholder">[Architecture / data flow / control hierarchy diagram]</div><figcaption>Explain what the reader should notice and attribute the source if adapted.</figcaption></figure>
+
+<h3>8.2 Inputs / outputs</h3>
+<div class="paper-table-wrap"><table><thead><tr><th>Component</th><th>Input</th><th>Output</th><th>Role</th></tr></thead><tbody><tr><td>[Module]</td><td>[Observation / state / tokens]</td><td>[Action / latent / command]</td><td>[Why it exists]</td></tr></tbody></table></div>
+
+<h3>8.3 Objective functions / reward / optimization target</h3>
+<p>Include only equations that are needed to understand the method.</p>
+<p>$$\mathcal{L}=\cdots$$</p>
+<p><strong>Variables:</strong> define important symbols and explain how the objective affects system behavior.</p>
+
+<h3>8.4 Dataset and training</h3>
+<p>Document dataset, simulator, collection procedure, initialization, algorithm, curriculum, losses/rewards, compute, parallelism, fine-tuning stages, and frozen vs. trainable components.</p>
+<div class="paper-note"><strong>Implementation detail worth remembering:</strong> record the practical choice most likely to matter for reproduction.</div>
+
+<h3>8.5 Inference procedure</h3>
+<p>Describe the runtime flow step by step. Clarify what information is available at deployment time and which components run online.</p>
+
+<h2>9. Experiments and results</h2>
+<p>Use the smallest set of results needed to judge the central claim. Separate simulation-only evidence, real-world evidence, and author-defined internal benchmarks.</p>
+<div class="paper-table-wrap"><table><thead><tr><th>Benchmark / robot</th><th>Split / setting</th><th>Metric</th><th>Baseline</th><th>Proposed</th><th>Notes</th></tr></thead><tbody><tr><td>[Benchmark]</td><td>[Setting]</td><td>[Metric]</td><td>—</td><td><strong>—</strong></td><td>[Interpretation / caveat]</td></tr></tbody></table></div>
+
+<h3>9.1 Generalization / ablation / scaling</h3>
+<p>Include the experiment that most directly tests the central mechanism: unseen objects, larger team sizes, new tasks, real hardware, robustness, or ablation.</p>
+
+<h2>10. Critical review</h2>
+<h3>10.1 Strengths</h3>
+<ul><li>Strong technical idea</li><li>Strong experimental evidence</li><li>Useful engineering or research property</li></ul>
+<h3>10.2 Weaknesses</h3>
+<ul><li>Methodological limitation</li><li>Evaluation limitation</li><li>Deployment or scalability limitation</li></ul>
+<h3>10.3 Hidden assumptions</h3>
+<ul><li>Privileged state / calibration / object model / fixed controller / known task structure</li><li>Assumption that may not hold outside the reported benchmark</li></ul>
+
+<h2>11. Reproducibility assessment</h2>
+<div class="paper-table-wrap"><table><thead><tr><th>Item</th><th>Status</th><th>Notes</th></tr></thead><tbody>
+<tr><td>Code completeness</td><td>Good / Partial / Missing</td><td>What is released</td></tr>
+<tr><td>Checkpoints</td><td>Available / Missing</td><td>Which models</td></tr>
+<tr><td>Dataset availability</td><td>Available / Restricted / Missing</td><td>License / access</td></tr>
+<tr><td>Hyperparameters</td><td>Complete / Partial</td><td>Missing values</td></tr>
+<tr><td>Hardware / compute cost</td><td>Known / Estimated / Unknown</td><td>GPU / robot / training time</td></tr>
+<tr><td>Missing implementation details</td><td>Low / Medium / High risk</td><td>What blocks reproduction</td></tr>
+</tbody></table></div>
+
+<h2>12. Result validity</h2>
+<ul>
+  <li><strong>Fair comparison:</strong> are baselines trained and evaluated under comparable conditions?</li>
+  <li><strong>Statistics:</strong> are sample count, variance, confidence intervals, or significance adequate?</li>
+  <li><strong>Sim / real gap:</strong> which claims are supported on hardware rather than simulation only?</li>
+  <li><strong>Benchmark independence:</strong> is the benchmark public/standard or internally constructed?</li>
+  <li><strong>Metric validity:</strong> does the metric actually represent task success or deployment usefulness?</li>
+  <li><strong>Claim-to-evidence match:</strong> which claims are strongly supported, partially supported, or still speculative?</li>
+</ul>
+
+<h2>13. Why this paper matters</h2>
+<p>Explain what capability or research direction changes, which assumptions are relaxed, and where the work fits relative to VLA, RL, humanoid control, manipulation, sim-to-real, or other relevant areas.</p>
+
+<h2>14. Engineering takeaways</h2>
 <ul class="paper-takeaways">
-  <li><strong>One-sentence thesis:</strong> the main contribution in plain technical language.</li>
-  <li><strong>Most important mechanism:</strong> the idea worth reusing elsewhere.</li>
-  <li><strong>Strongest evidence:</strong> the experiment that best supports the claim.</li>
-  <li><strong>Main caveat:</strong> the limitation that most changes how the result should be interpreted.</li>
+  <li><strong>Reusable idea:</strong> what to borrow for another system.</li>
+  <li><strong>Implementation lesson:</strong> practical recipe worth remembering.</li>
+  <li><strong>Deployment implication:</strong> what changes for a real robot/system.</li>
+  <li><strong>Main caveat:</strong> what must not be overlooked.</li>
 </ul>
 
-<h2>12. References</h2>
+<h2>15. Experiments to reproduce</h2>
+<ol><li>Minimum experiment needed to verify the core claim</li><li>Ablation needed to isolate the central mechanism</li><li>Real-world or out-of-distribution experiment worth running</li></ol>
 
-<ol>
-  <li>Paper title, authors, venue/year.</li>
-  <li><a href="#">Official project page</a>.</li>
-  <li><a href="#">arXiv abstract</a>.</li>
-  <li><a href="#">arXiv HTML paper</a>.</li>
-  <li>Official code repository / conference page when available.</li>
-</ol>
+<h2>16. Related papers</h2>
+<ul><li>Closest predecessor and how it differs</li><li>Competing approach</li><li>Follow-up or complementary work</li></ul>
 
-<div class="paper-note">
-  <strong>Writing rule.</strong> Keep reported facts separate from interpretation. Attribute external figures and numerical results, reconstruct diagrams when useful, and always end with limitations rather than presenting the paper as universally solved.
-</div>
+<h2>17. Final verdict</h2>
+<div class="paper-table-wrap"><table><tbody>
+<tr><th>Impact</th><td>High / Medium / Low — why</td></tr>
+<tr><th>Confidence</th><td>High / Medium / Low — confidence in the evidence</td></tr>
+<tr><th>Usefulness for current work</th><td>High / Medium / Low — specific relevance</td></tr>
+</tbody></table></div>
+<p><strong>Bottom line:</strong> end with a short paragraph separating what the paper convincingly establishes from what remains unproven.</p>
+
+<h2>18. References</h2>
+<ol><li>Paper title, authors, venue/year.</li><li>Official project page.</li><li>arXiv abstract.</li><li>arXiv HTML paper.</li><li>Official code repository / conference page when available.</li></ol>
+
+<div class="paper-note"><strong>Writing rule.</strong> Keep reported facts, author claims, and your interpretation visibly separate. Attribute external figures and numerical results, reconstruct diagrams when useful, and explicitly state uncertainty when the source material does not support a stronger conclusion.</div>
