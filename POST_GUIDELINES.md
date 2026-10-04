@@ -1,6 +1,159 @@
 # Research Post Guidelines
 
-These rules apply to every research-paper review post published on this site.
+These rules define the canonical structures for research-oriented posts on this site.
+
+# Deep Research
+
+## Canonical Deep Research template
+
+All future **Deep Research** posts must start from the canonical Deep Research template unless the topic genuinely requires a different structure.
+
+Public reference pages:
+
+- English: `/posts/template-deep-research/`
+- Korean: `/ko/posts/template-deep-research/`
+
+Copyable source skeleton:
+
+- `_templates/deep-research-post.html`
+
+Category placement:
+
+- `Deep Research / VLA`
+- `Deep Research / RL`
+- `Deep Research / etc`
+
+Use `VLA` or `RL` when the main research question clearly belongs there; otherwise use `etc`.
+
+## Deep Research vs. Paper Review
+
+Use **Paper Review** when the unit of analysis is primarily one paper and the goal is to evaluate its claims, evidence, reproducibility, and implications.
+
+Use **Deep Research** when the goal is to synthesize multiple papers, official documentation, repositories, company claims, benchmarks, engineering constraints, and inference into a technical decision or research direction.
+
+A Deep Research post should end with a concrete engineering recommendation, experiment plan, or decision whenever the evidence supports one.
+
+## Required Deep Research structure
+
+Use this structure by default:
+
+1. Document metadata
+   - Topic
+   - Research question
+   - Author / Owner
+   - Audience
+   - Reference date
+   - Last updated
+   - Scope / Exclusions
+   - Confidence: High / Medium / Low
+2. Executive Summary
+   - Core conclusion
+   - Strongest evidence
+   - Engineering or strategic recommendation
+   - Unresolved risk
+3. Problem Definition
+   - Background
+   - Research Questions
+   - Terminology and Assumptions
+   - Evidence Taxonomy
+4. Theory and Technical Foundations
+   - Core definitions
+   - Equations and variable definitions
+   - Compute complexity / latency / memory
+   - Conditions under which theory breaks in a real system
+5. Related Work and Current Landscape
+6. Detailed Analysis
+   - Architecture
+   - Training and Data
+   - Inference and Deployment
+   - Evaluation and Generalization
+   - Safety and Reliability
+7. Trade-offs
+   - Advantages
+   - Disadvantages
+   - Limitations
+   - Failure Modes
+8. Engineering Recommendations
+   - Recommended default
+   - Data requirements
+   - Model modification order
+   - Implementation stages
+   - Fallback / rollback
+9. Experiment Plan
+10. Risks, Gaps and Open Questions
+11. Conclusions and Implications
+12. References
+
+H2 and H3 headings should remain descriptive because the shared Contents panel automatically uses them for navigation.
+
+## Mandatory evidence taxonomy
+
+Deep Research posts must distinguish source strength explicitly when it materially affects the conclusion. Use these labels:
+
+- **[Paper evidence]** — peer-reviewed paper or preprint result.
+- **[Official documentation]** — project, vendor, repository, product, dataset, or benchmark documentation.
+- **[Company claim]** — company announcement, demo, or benchmark not independently verified.
+- **[Inference]** — analysis derived from available evidence rather than directly reported by a source.
+- **[Experiment proposal]** — a test proposed to resolve uncertainty.
+
+Do not silently convert a company claim or inference into an established fact. If sources disagree, preserve the disagreement and explain which evidence is stronger.
+
+## Deep Research comparison rule
+
+When comparing methods or systems, use a compact landscape table when possible:
+
+```text
+Approach | Architecture / Data | Reported Results | Strengths | Limitations | Source
+```
+
+Prefer primary papers, official documentation, official repositories, datasets, and benchmarks over secondary summaries.
+
+## Deep Research engineering rule
+
+The report must connect research findings to engineering consequences where applicable. Discuss:
+
+- Data requirements and licensing constraints
+- Compute, memory, latency, and deployment requirements
+- Model/component changes in lowest-risk order
+- Validation stages
+- Fallback and rollback paths
+- Safety/reliability assumptions and failure modes
+
+## Mandatory experiment-plan fields
+
+When a Deep Research report proposes validation work, the experiment plan should include:
+
+- **Hypothesis**
+- **Baseline**
+- **Independent variables**
+- **Metrics**
+- **Dataset splits**
+- **Statistical test / confidence method / sample-count rule**
+- **Promotion / rejection criteria**
+
+The plan should be specific enough that an engineer or researcher could implement the first experiment without having to infer the decision criteria.
+
+## Deep Research conclusion rule
+
+The final section must answer the original research question directly and distinguish:
+
+1. Evidence-backed conclusions
+2. Remaining inference
+3. Missing evidence / unresolved risk
+4. Recommended next action
+
+When appropriate, end with a compact decision such as:
+
+- Adopt
+- Prototype
+- Investigate further
+- Reject
+
+Include a confidence level and rationale.
+
+---
+
+# Paper Review
 
 ## Canonical Paper Review template
 
@@ -195,4 +348,4 @@ Project page ↗   arXiv ↗   HTML paper ↗
 
 ## Standing rule
 
-This is a permanent project rule. All future Paper Review posts must start from the canonical Paper Review template and use the shared header/components rather than introducing custom per-post source-link or structural styling without a specific reason.
+This is a permanent project rule. All future Deep Research posts must start from the canonical Deep Research template, and all future Paper Review posts must start from the canonical Paper Review template, unless there is a specific technical reason to deviate.
