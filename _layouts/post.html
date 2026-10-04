@@ -1,12 +1,47 @@
 ---
 layout: default
 ---
+{% assign page_lang = page.lang | default: 'en' %}
+{% assign category_path = site.data.category_assignments[page.url] %}
+<style>
+.post-header-row{display:flex;align-items:flex-start;justify-content:space-between;gap:24px}.post-header-main{min-width:0;flex:1}.post-category-control{flex:0 0 auto;margin-top:8px;display:flex;flex-direction:column;align-items:flex-end;gap:5px}.post-category-current{font:600 .72rem/1.3 var(--sans);color:var(--muted);text-transform:uppercase;letter-spacing:.05em}.post-category-select{max-width:245px;border:1px solid var(--line);border-radius:8px;background:var(--surface);color:var(--text);padding:8px 30px 8px 10px;font:600 .78rem/1.2 var(--sans);cursor:pointer}.post-category-select:hover,.post-category-select:focus{border-color:var(--link);outline:none}.post-category-help{max-width:250px;text-align:right;color:var(--muted);font:.68rem/1.35 var(--sans)}@media(max-width:700px){.post-header-row{flex-direction:column}.post-category-control{align-items:flex-start;margin-top:0}.post-category-help{text-align:left}.post-category-select{max-width:100%}}
+</style>
 <article class="post-page">
   <header>
-    <h1>{{ page.title }}</h1>
-    <div class="post-meta">
-      <time datetime="{{ page.date | date_to_xmlschema }}">{{ page.date | date: "%B %d, %Y" }}</time>
-      {% if page.categories %} · {{ page.categories | join: ' / ' }}{% endif %}
+    <div class="post-header-row">
+      <div class="post-header-main">
+        <h1>{{ page.title }}</h1>
+        <div class="post-meta">
+          <time datetime="{{ page.date | date_to_xmlschema }}">{{ page.date | date: "%B %d, %Y" }}</time>
+          {% if category_path %} · {{ category_path | join: ' / ' }}{% elsif page.categories %} · {{ page.categories | join: ' / ' }}{% endif %}
+        </div>
+      </div>
+
+      <div class="post-category-control">
+        <span class="post-category-current">
+          {% if page_lang == 'ko' %}현재 폴더{% else %}Current folder{% endif %}:
+          {% if category_path %}{{ category_path | join: ' / ' }}{% else %}Unassigned{% endif %}
+        </span>
+        <select class="post-category-select"
+                data-category-move-select
+                data-post-url="{{ page.url }}"
+                data-post-title="{{ page.title | escape }}"
+                aria-label="{% if page_lang == 'ko' %}포스트 폴더 이동{% else %}Move post to another folder{% endif %}">
+          <option value="">{% if page_lang == 'ko' %}다른 폴더로 이동…{% else %}Move to…{% endif %}</option>
+          {% for group in site.data.category_tree %}
+            {% if group.children == empty %}
+              <option value="{{ group.name }}">{{ group.name }}</option>
+            {% else %}
+              <optgroup label="{{ group.name }}">
+                {% for child in group.children %}
+                  <option value="{{ group.name }} / {{ child }}">{{ group.name }} / {{ child }}</option>
+                {% endfor %}
+              </optgroup>
+            {% endif %}
+          {% endfor %}
+        </select>
+        <span class="post-category-help">{% if page_lang == 'ko' %}선택 후 GitHub에서 변경 요청을 제출하면 자동 반영됩니다.{% else %}Choose a folder, then submit the prefilled GitHub request to apply it.{% endif %}</span>
+      </div>
     </div>
     {% if page.description %}<p class="intro">{{ page.description }}</p>{% endif %}
   </header>
