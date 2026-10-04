@@ -1,0 +1,112 @@
+name: Apply post category move
+
+on:
+  issues:
+    types: [opened]
+
+permissions:
+  contents: write
+  issues: write
+
+jobs:
+  move-category:
+    if: github.actor == github.repository_owner && startsWith(github.event.issue.title, '[Category Move]')
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Validate request and update mapping
+        env:
+          ISSUE_BODY: ${{ github.event.issue.body }}
+        run: |
+          python3 <<'PY'
+          import os
+          import re
+          from pathlib import Path
+
+          def unquote(value):
+              value = value.strip()
+              if len(value) >= 2 and value[0] == value[-1] == '"':
+                  value = value[1:-1]
+              return value.replace('\\"', '"').replace('\\\\', '\\')
+
+          body = os.environ.get('ISSUE_BODY', '')
+          post_match = re.search(r'^post_url:\s*(\S+)\s*$', body, re.MULTILINE)
+          category_match = re.search(r'^category:\s*(.+?)\s*$', body, re.MULTILINE)
+          if not post_match or not category_match:
+              raise SystemExit('Invalid category move request body.')
+
+          post_url = post_match.group(1).strip()
+          destination = category_match.group(1).strip()
+          if not (post_url.startswith('/posts/') or post_url.startswith('/ko/posts/')):
+              raise SystemExit('Unsupported post URL.')
+
+          tree_path = Path('_data/category_tree.yml')
+          groups = {}
+          current = None
+          for raw in tree_path.read_text(encoding='utf-8').splitlines():
+              if raw.startswith('- name:'):
+                  current = unquote(raw.split(':', 1)[1])
+                  groups[current] = []
+              elif current and raw.startswith('    - '):
+                  groups[current].append(unquote(raw[6:]))
+
+          allowed = set()
+          for group, children in groups.items():
+              if children:
+                  allowed.update(f'{group} / {child}' for child in children)
+              else:
+                  allowed.add(group)
+
+          if destination not in allowed:
+              raise SystemExit(f'Category is not allowed: {destination}')
+
+          mapping_path = Path('_data/category_assignments.yml')
+          assignments = {}
+          current_key = None
+          for raw in mapping_path.read_text(encoding='utf-8').splitlines():
+              if raw and not raw.startswith(' ') and raw.endswith(':'):
+                  current_key = unquote(raw[:-1])
+                  assignments[current_key] = []
+              elif current_key and raw.startswith('  - '):
+                  assignments[current_key].append(unquote(raw[4:]))
+
+          parts = destination.split(' / ', 1)
+          counterpart = post_url[3:] if post_url.startswith('/ko/') else '/ko' + post_url
+          assignments[post_url] = parts
+          assignments[counterpart] = parts
+
+          def quote(value):
+              escaped = value.replace('\\', '\\\\').replace('"', '\\"')
+              return f'"{escaped}"'
+
+          lines = []
+          for key, values in assignments.items():
+              lines.append(f'{quote(key)}:')
+              for value in values:
+                  lines.append(f'  - {quote(value)}')
+
+          mapping_path.write_text('\n'.join(lines) + '\n', encoding='utf-8')
+          print(f'Moved {post_url} and its language pair to {destination}')
+          PY
+
+      - name: Commit category move
+        run: |
+          if git diff --quiet -- _data/category_assignments.yml; then
+            echo "No category mapping change required."
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add _data/category_assignments.yml
+          git commit -m "Move post category from issue #${{ github.event.issue.number }}"
+          git push
+
+      - name: Close category move request
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh issue comment ${{ github.event.issue.number }} --body "Category mapping applied. The English/Korean pair is moved together and GitHub Pages will rebuild automatically."
+          gh issue close ${{ github.event.issue.number }}
