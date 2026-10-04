@@ -5,6 +5,12 @@
     - Robotics
     - "Grasping & Manipulation"
 
+- name: Deep Research
+  children:
+    - VLA
+    - RL
+    - etc
+
 - name: Paper Review
   children:
     - "2026.10"
