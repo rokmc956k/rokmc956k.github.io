@@ -1,0 +1,170 @@
+---
+layout: post
+title: "decMHT: 분산형 Multi-Humanoid Pickup, Transport, Handover"
+description: "object-centric attachment specification, hierarchical decentralized control, IPPO, 10대 humanoid zero-shot scaling, 50 kg payload와 Digit V3 sim-to-real을 중심으로 decMHT를 정리합니다."
+date: 2026-10-03 23:41:00 -0400
+lang: ko
+permalink: /ko/posts/decmht-decentralized-multi-humanoid-transport/
+categories:
+  - Humanoid Robotics
+  - Reinforcement Learning
+  - Multi-Robot Systems
+tags:
+  - decMHT
+  - humanoid
+  - multi-robot
+  - IPPO
+  - Digit V3
+  - IsaacLab
+  - sim-to-real
+math: true
+---
+
+<style>
+.decmht-note{border-left:3px solid var(--link);padding:14px 18px;margin:24px 0;background:var(--surface)}.decmht-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px;margin:24px 0}.decmht-card{border:1px solid var(--line);border-radius:10px;padding:16px;background:var(--surface)}.decmht-card h4{margin:.1rem 0 .35rem}.decmht-kpi{font-size:1.7rem;font-weight:700;color:var(--link);line-height:1.1}.decmht-caption{font-family:var(--sans);font-size:.82rem;color:var(--muted);margin-top:8px}.decmht-table-wrap{overflow-x:auto;margin:20px 0}.decmht-table{min-width:720px}.decmht-svg{width:100%;height:auto;border:1px solid var(--line);border-radius:10px;background:var(--surface);margin:18px 0}.decmht-pill{display:inline-block;border:1px solid var(--line);border-radius:999px;padding:4px 9px;margin:2px 4px 2px 0;font:600 .78rem var(--sans);color:var(--muted)}@media(max-width:700px){.decmht-grid{grid-template-columns:1fr}.decmht-kpi{font-size:1.45rem}}
+</style>
+
+<p class="eyebrow">논문 정리 · Multi-Humanoid Loco-Manipulation</p>
+
+<p><strong>decMHT</strong>는 여러 humanoid가 하나의 물체를 들어 운반하고 서로 handover하는 문제를 <strong>decentralized object-centric control</strong>로 푼다. 각 robot은 동일한 local policy를 실행하고, 다른 robot의 full state나 global payload geometry를 직접 보지 않는다. 대신 자신의 local attachment specification과 local command만 받고, 실제 coordination은 shared payload를 통해 간접적으로 일어난다.</p>
+
+<div class="decmht-grid">
+  <div class="decmht-card"><div class="decmht-kpi">1–10 robots</div><div>학습보다 큰 team size까지 zero-shot scaling</div></div>
+  <div class="decmht-card"><div class="decmht-kpi">50 kg</div><div>simulation에서 heavy-payload generalization</div></div>
+  <div class="decmht-card"><div class="decmht-kpi">97%+</div><div>1–10대 scaling 실험의 pickup success</div></div>
+  <div class="decmht-card"><div class="decmht-kpi">Digit V3</div><div>single/dual transport와 handover hardware transfer</div></div>
+</div>
+
+<h2>1. 왜 multi-humanoid transport가 어려운가?</h2>
+<p>이 문제는 balance, locomotion, hand contact, load support, object tracking, teammate interaction force가 동시에 얽힌다. centralized controller는 모든 robot state와 action을 묶어 최적화할 수 있지만, robot 수가 늘수록 observation/action dimension이 커지고 특정 team configuration에 구조적으로 묶이기 쉽다.</p>
+
+<div class="decmht-note"><strong>decMHT의 질문:</strong> 전체 multi-robot state가 아니라 <em>object interface</em>를 중심으로 policy를 정의하면 각 humanoid가 자신의 local contribution만 해결하면서도 팀 전체가 협력할 수 있는가?</div>
+
+<h2>2. Object-centric attachment specification</h2>
+<p>robot $r$의 local attachment specification은 다음과 같다.</p>
+
+<p>$$\mathcal{A}^{(r)} = \left({}^{b}T^{(r)},\, w^{(r)},\, d^{(r)}\right).$$</p>
+
+<p>$${}^{b}T^{(r)}\in SE(3)$$는 torso frame 기준 attachment frame pose, $w^{(r)}$는 양손 contact offset, $d^{(r)}$는 접근 시 torso clearance다. 중요한 점은 full object mesh나 다른 robot의 상태를 입력하지 않고 <strong>자기 attachment 주변의 local geometric specification</strong>만 사용한다는 것이다.</p>
+
+<svg class="decmht-svg" viewBox="0 0 1000 420" role="img" aria-label="Object-centric attachment abstraction">
+  <rect x="70" y="160" width="860" height="105" rx="12" fill="none" stroke="currentColor" stroke-opacity=".38" stroke-width="3"/>
+  <text x="500" y="218" text-anchor="middle" fill="currentColor" font-size="28" font-family="Georgia,serif">Shared payload</text>
+  <g fill="none" stroke="currentColor" stroke-width="3"><circle cx="220" cy="92" r="42"/><line x1="220" y1="134" x2="220" y2="178"/><circle cx="500" cy="92" r="42"/><line x1="500" y1="134" x2="500" y2="178"/><circle cx="780" cy="92" r="42"/><line x1="780" y1="134" x2="780" y2="178"/></g>
+  <g fill="var(--link)" font-family="ui-sans-serif,system-ui" font-size="20" font-weight="700"><text x="220" y="325" text-anchor="middle">A(1)</text><text x="500" y="325" text-anchor="middle">A(2)</text><text x="780" y="325" text-anchor="middle">A(3)</text></g>
+  <text x="500" y="372" text-anchor="middle" fill="currentColor" opacity=".7" font-size="21" font-family="ui-sans-serif,system-ui">각 robot은 자신의 local attachment + local command만 관측</text>
+</svg>
+<div class="decmht-caption">이 리뷰를 위해 재구성한 개념도. 실제 방법은 robot별로 local attachment frame을 지정한다.</div>
+
+<h2>3. 하나의 payload command를 robot별 local command로 변환</h2>
+<p>task-level payload command는</p>
+
+<p>$$\mathcal{C}_{\mathrm{pl}} = (v_x, v_y, \omega_z, h)$$</p>
+
+<p>로 표현된다. payload의 planar velocity, yaw rate, height를 의미한다. 각 robot은 자신의 attachment offset을 이용해 local command frame의 속도로 변환한다.</p>
+
+<p>$$v^{(r)}_{\mathrm{cf}} = v_{\mathrm{pl}} + \omega_{\mathrm{pl}} \times p^{(r)}_{\mathrm{offset}},$$</p>
+
+<p>$$\omega^{(r)}_{\mathrm{cf}} = \omega_{\mathrm{pl}}, \qquad h^{(r)}_{\mathrm{cf}} = h_{\mathrm{pl}} + p^{(r)}_{\mathrm{offset},z}.$$</p>
+
+<p>즉 planner는 하나의 rigid payload만 생각하고, 각 humanoid는 자신이 붙어 있는 위치에서 필요한 local motion만 받는다. 이 분해가 team size 변화에 대한 scaling의 핵심이다.</p>
+
+<h2>4. Hierarchical decentralized controller</h2>
+<p>각 humanoid는 high-level loco-manipulation policy와 frozen low-level locomotion policy를 사용한다. low-level policy는 proprioception과 base motion target을 leg joint target으로 변환한다.</p>
+
+<p>$$q^{(r)}_{\mathrm{leg}} = \pi_l\left(s^{(r)}, v_x^{(r)}, v_y^{(r)}, \omega_z^{(r)}, h^{(r)}\right).$$</p>
+
+<p>high-level policy는 arm target과 base motion target을 동시에 생성한다.</p>
+
+<p>$$\left(q^{(r)}_{\mathrm{arm}},v_x^{(r)},v_y^{(r)},\omega_z^{(r)},h^{(r)}\right)
+= \pi_h\left(s^{(r)},\mathcal{A}^{(r)},\mathcal{C}^{(r)}_{\mathrm{cf}},m^{(r)}\right).$$</p>
+
+<svg class="decmht-svg" viewBox="0 0 1060 380" role="img" aria-label="decMHT hierarchy">
+  <g font-family="ui-sans-serif,system-ui" fill="currentColor">
+    <rect x="40" y="70" width="250" height="70" rx="12" fill="none" stroke="currentColor" stroke-opacity=".4"/><text x="165" y="112" text-anchor="middle" font-size="21">state + attachment</text>
+    <rect x="40" y="205" width="250" height="70" rx="12" fill="none" stroke="currentColor" stroke-opacity=".4"/><text x="165" y="247" text-anchor="middle" font-size="21">local command + mode</text>
+    <rect x="395" y="105" width="270" height="140" rx="14" fill="none" stroke="var(--link)" stroke-width="3"/><text x="530" y="162" text-anchor="middle" font-size="25" font-weight="700">High-level πh</text><text x="530" y="198" text-anchor="middle" font-size="18" opacity=".75">arm + base targets</text>
+    <rect x="780" y="65" width="230" height="90" rx="14" fill="none" stroke="currentColor" stroke-opacity=".4"/><text x="895" y="118" text-anchor="middle" font-size="22">Arm targets</text>
+    <rect x="780" y="220" width="230" height="100" rx="14" fill="none" stroke="currentColor" stroke-opacity=".4"/><text x="895" y="260" text-anchor="middle" font-size="22">Frozen πl</text><text x="895" y="290" text-anchor="middle" font-size="17" opacity=".7">base → leg targets</text>
+  </g>
+  <g stroke="currentColor" stroke-width="2.4"><line x1="290" y1="105" x2="395" y2="145"/><line x1="290" y1="240" x2="395" y2="205"/><line x1="665" y1="145" x2="780" y2="110"/><line x1="665" y1="205" x2="780" y2="265"/></g>
+</svg>
+
+<h2>5. Mode-gated behavior: idle / track</h2>
+<p>binary mode flag $m^{(r)}\in\{\texttt{idle},\texttt{track}\}$를 사용해 하나의 network가 참여/비참여 behavior를 모두 표현한다.</p>
+
+<p>$$R^{(r)} = \mathbf{1}[m^{(r)}=\texttt{idle}]R_{\mathrm{idle}} + \mathbf{1}[m^{(r)}=\texttt{track}]R_{\mathrm{track}}.$$</p>
+
+<div><span class="decmht-pill">Approach</span><span class="decmht-pill">Contact</span><span class="decmht-pill">Holding</span><span class="decmht-pill">Command tracking</span></div>
+
+<p>handover를 위한 별도 policy가 없다는 점도 흥미롭다. 단순히 두 robot의 mode를 시간에 따라 바꾼다.</p>
+
+<table>
+<thead><tr><th>Phase</th><th>Holder A</th><th>Receiver B</th><th>의미</th></tr></thead>
+<tbody>
+<tr><td>1</td><td>track</td><td>idle</td><td>A가 payload를 지지</td></tr>
+<tr><td>2</td><td>track</td><td>track</td><td>두 robot이 동시에 support</td></tr>
+<tr><td>3</td><td>idle</td><td>track</td><td>B가 sole holder가 됨</td></tr>
+</tbody>
+</table>
+
+<h2>6. Independent PPO와 curriculum</h2>
+<p>high-level policy는 Independent PPO(IPPO)로 학습한다. 먼저 single-robot manipulation에서 기본 skill을 학습한 뒤, 같은 shared policy를 two-robot cooperative episode로 fine-tune한다. deployment에서는 이 policy copy를 각 robot이 독립적으로 실행한다.</p>
+
+<svg class="decmht-svg" viewBox="0 0 1100 230" role="img" aria-label="decMHT curriculum">
+  <g font-family="ui-sans-serif,system-ui" font-size="17" text-anchor="middle" fill="currentColor">
+    <rect x="25" y="70" width="155" height="80" rx="12" fill="none" stroke="currentColor" stroke-opacity=".4"/><text x="102" y="104">1. Assisted</text><text x="102" y="128">contact</text>
+    <rect x="205" y="70" width="155" height="80" rx="12" fill="none" stroke="currentColor" stroke-opacity=".4"/><text x="282" y="104">2. Holding</text><text x="282" y="128">without assist</text>
+    <rect x="385" y="70" width="155" height="80" rx="12" fill="none" stroke="currentColor" stroke-opacity=".4"/><text x="462" y="104">3. Height</text><text x="462" y="128">tracking</text>
+    <rect x="565" y="70" width="155" height="80" rx="12" fill="none" stroke="currentColor" stroke-opacity=".4"/><text x="642" y="104">4. Velocity</text><text x="642" y="128">tracking</text>
+    <rect x="745" y="70" width="155" height="80" rx="12" fill="none" stroke="currentColor" stroke-opacity=".4"/><text x="822" y="104">5. Object</text><text x="822" y="128">randomization</text>
+    <rect x="925" y="70" width="150" height="80" rx="12" fill="none" stroke="var(--link)" stroke-width="2.5"/><text x="1000" y="104">6. Two-robot</text><text x="1000" y="128">fine-tuning</text>
+  </g>
+</svg>
+
+<h2>7. Zero-shot scaling 결과</h2>
+<p>가장 강한 결과는 policy를 최대 두 robot으로만 학습하고도 evaluation에서 <strong>10대 humanoid까지 zero-shot</strong>으로 확장한다는 점이다.</p>
+
+<div class="decmht-table-wrap"><table class="decmht-table">
+<thead><tr><th>Team size</th><th>Pickup success</th><th>Payload RMS tilt</th><th>해석</th></tr></thead>
+<tbody>
+<tr><td>1</td><td>97%+</td><td>8.04°</td><td>single-robot baseline</td></tr>
+<tr><td>2</td><td>97%+</td><td>낮아짐</td><td>cooperative training regime</td></tr>
+<tr><td>4</td><td>97%+</td><td>더 낮아짐</td><td>zero-shot scaling</td></tr>
+<tr><td>10</td><td>97%+</td><td>1.21°</td><td>large-team zero-shot scaling</td></tr>
+</tbody>
+</table></div>
+
+<p>team size가 커질수록 payload tilt가 감소한다는 점은 단순히 robot 수를 늘릴 수 있다는 수준을 넘어, local policy가 shared object를 통해 안정적인 cooperative load distribution을 만들어낸다는 것을 보여준다.</p>
+
+<h2>8. Unseen object와 50 kg payload</h2>
+<p>학습 payload 범위를 벗어난 cabinet, fridge, log, bed, concrete slab 같은 geometry에서도 generalization을 평가한다. team size를 늘리면 simulation에서 최대 <strong>50 kg</strong> payload까지 운반한다.</p>
+
+<p>특히 bed task에서는 single-robot-only training policy가 44.1% pickup success에 머문 반면, two-robot cooperative fine-tuning 이후 decMHT는 <strong>85.2%</strong>까지 올라간다. 이는 cooperative dynamics를 실제로 학습하는 단계가 필요함을 보여준다.</p>
+
+<h2>9. Cost of Transport 관점</h2>
+<p>효율성은 흔히 Cost of Transport로 비교할 수 있다.</p>
+
+<p>$$\mathrm{CoT}=\frac{E}{m g d}$$</p>
+
+<p>여기서 $E$는 이동 중 소비 에너지, $m$은 전체 이동 질량, $d$는 이동 거리다. multi-robot transport에서는 단순 success뿐 아니라 robot 수 증가에 따른 energy efficiency와 load distribution도 함께 보는 것이 중요하다.</p>
+
+<h2>10. Sim-to-real: Digit V3</h2>
+<p>학습 policy는 Digit V3 hardware로 transfer되어 single-robot transport, dual-robot cooperative transport, handover를 수행한다. 이 점은 decMHT의 object-centric abstraction이 simulation에서만 유효한 coordination trick이 아니라 실제 hardware에서도 활용 가능한 interface임을 보여준다.</p>
+
+<h2>11. 연구 관점의 핵심 takeaway</h2>
+<div class="decmht-note"><strong>가장 중요한 아이디어:</strong> team-level coordination을 explicit communication이나 centralized state estimation으로 만들지 않고, <em>shared object dynamics 자체를 coordination channel</em>로 사용한다.</div>
+
+<ul>
+<li><strong>Scalability:</strong> global team dimension에 직접 의존하지 않는 local policy라서 robot 수 변화에 강하다.</li>
+<li><strong>Composability:</strong> attachment specification과 mode switching만 바꿔 pickup, transport, handover를 같은 policy로 표현한다.</li>
+<li><strong>Hierarchical prior:</strong> frozen locomotion policy를 유지해 high-level manipulation learning의 난이도를 줄인다.</li>
+<li><strong>Limit:</strong> attachment assignment와 high-level payload command를 제공하는 상위 planning layer는 여전히 필요하다.</li>
+<li><strong>Industrial implication:</strong> 장척물, 대형 부품, 유연한 team size가 필요한 cooperative handling에 특히 흥미로운 구조다.</li>
+</ul>
+
+<h2>References</h2>
+<ul>
+<li><a href="https://decmht.github.io/" target="_blank" rel="noopener">decMHT project page</a></li>
+<li><a href="https://arxiv.org/abs/2609.17824" target="_blank" rel="noopener">decMHT paper, arXiv:2609.17824</a></li>
+</ul>
