@@ -4,8 +4,18 @@ layout: default
 {% assign page_lang = page.lang | default: 'en' %}
 {% assign category_path = site.data.category_assignments[page.url] %}
 <style>
-.post-header-row{display:flex;align-items:flex-start;justify-content:space-between;gap:24px}.post-header-main{min-width:0;flex:1}.post-category-control{flex:0 0 auto;margin-top:8px;display:flex;flex-direction:column;align-items:flex-end;gap:5px}.post-category-current{font:600 .72rem/1.3 var(--sans);color:var(--muted);text-transform:uppercase;letter-spacing:.05em}.post-category-select{max-width:245px;border:1px solid var(--line);border-radius:8px;background:var(--surface);color:var(--text);padding:8px 30px 8px 10px;font:600 .78rem/1.2 var(--sans);cursor:pointer}.post-category-select:hover,.post-category-select:focus{border-color:var(--link);outline:none}.post-category-help{max-width:250px;text-align:right;color:var(--muted);font:.68rem/1.35 var(--sans)}@media(max-width:700px){.post-header-row{flex-direction:column}.post-category-control{align-items:flex-start;margin-top:0}.post-category-help{text-align:left}.post-category-select{max-width:100%}}
+.post-header-row{display:flex;align-items:flex-start;justify-content:space-between;gap:24px}.post-header-main{min-width:0;flex:1}.post-category-control{flex:0 0 auto;margin-top:8px;display:flex;flex-direction:column;align-items:flex-end;gap:7px}.post-category-current{font:600 .72rem/1.3 var(--sans);color:var(--muted);text-transform:uppercase;letter-spacing:.05em}.post-category-select{max-width:245px;border:1px solid var(--line);border-radius:8px;background:var(--surface);color:var(--text);padding:8px 30px 8px 10px;font:600 .78rem/1.2 var(--sans);cursor:pointer}.post-category-select:hover,.post-category-select:focus{border-color:var(--link);outline:none}.post-category-help{max-width:250px;text-align:right;color:var(--muted);font:.68rem/1.35 var(--sans)}@media(max-width:700px){.post-header-row{flex-direction:column}.post-category-control{align-items:flex-start;margin-top:0}.post-category-help{text-align:left}.post-category-select{max-width:100%}}
 </style>
+
+<div class="post-toc-backdrop" data-toc-backdrop aria-hidden="true"></div>
+<aside class="post-toc-drawer" data-post-toc aria-hidden="true" aria-label="{% if page_lang == 'ko' %}목차{% else %}Contents{% endif %}">
+  <div class="post-toc-header">
+    <strong>{% if page_lang == 'ko' %}목차{% else %}Contents{% endif %}</strong>
+    <button class="post-toc-close" type="button" data-toc-close aria-label="{% if page_lang == 'ko' %}목차 닫기{% else %}Close contents{% endif %}">×</button>
+  </div>
+  <nav class="post-toc-list" data-toc-list aria-label="{% if page_lang == 'ko' %}이 글의 목차{% else %}Table of contents{% endif %}"></nav>
+</aside>
+
 <article class="post-page">
   <header>
     <div class="post-header-row">
@@ -18,6 +28,11 @@ layout: default
       </div>
 
       <div class="post-category-control">
+        <button class="post-contents-button" type="button" data-toc-open aria-label="{% if page_lang == 'ko' %}목차 열기{% else %}Open contents{% endif %}">
+          <span class="post-contents-icon" aria-hidden="true">☷</span>
+          <span>{% if page_lang == 'ko' %}목차{% else %}Contents{% endif %}</span>
+        </button>
+
         <span class="post-category-current">
           {% if page_lang == 'ko' %}현재 폴더{% else %}Current folder{% endif %}:
           {% if category_path %}{{ category_path | join: ' / ' }}{% else %}Unassigned{% endif %}
