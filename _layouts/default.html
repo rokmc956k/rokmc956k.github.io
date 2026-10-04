@@ -1,0 +1,38 @@
+<!doctype html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="dark light">
+  <title>{% if page.title %}{{ page.title }} · {% endif %}{{ site.title }}</title>
+  <meta name="description" content="{{ page.description | default: site.description }}">
+  <link rel="stylesheet" href="{{ '/assets/css/style.css' | relative_url }}">
+</head>
+<body>
+  <header class="site-header">
+    <div class="wrap header-inner">
+      <a class="brand" href="{{ '/' | relative_url }}">S. Lee</a>
+      <div class="header-actions">
+        <a class="nav-link" href="{{ '/' | relative_url }}#posts">Posts</a>
+        <button class="theme-toggle" type="button" aria-label="Toggle color theme">
+          <span data-theme-label>Dark</span>
+          <span class="toggle-track"><span class="toggle-thumb"></span></span>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <main class="wrap main-content">
+    {{ content }}
+  </main>
+
+  <footer class="site-footer">
+    <div class="wrap footer-inner">
+      <span>© {{ 'now' | date: '%Y' }} S. Lee</span>
+      <span>Built with Jekyll · GitHub Pages</span>
+    </div>
+  </footer>
+
+  <script src="{{ '/assets/js/theme.js' | relative_url }}"></script>
+</body>
+</html>
