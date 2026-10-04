@@ -1,0 +1,32 @@
+---
+layout: default
+title: Categories
+lang: en
+permalink: /categories/
+---
+<section class="taxonomy-page">
+  <p class="eyebrow">Browse</p>
+  <h1>Categories</h1>
+  <p class="taxonomy-intro">Browse research notes and technical reviews by topic.</p>
+
+  <div class="taxonomy-list">
+    {% assign sorted_categories = site.categories | sort %}
+    {% for category in sorted_categories %}
+      {% assign category_name = category[0] %}
+      {% assign category_posts = category[1] %}
+      <details class="taxonomy-group" open>
+        <summary>{{ category_name }}</summary>
+        <div class="taxonomy-posts">
+          {% for post in category_posts %}
+            {% unless post.lang == 'ko' %}
+              <a href="{{ post.url | relative_url }}">
+                <span>{{ post.title }}</span>
+                <time>{{ post.date | date: "%Y.%m.%d" }}</time>
+              </a>
+            {% endunless %}
+          {% endfor %}
+        </div>
+      </details>
+    {% endfor %}
+  </div>
+</section>
