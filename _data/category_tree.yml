@@ -9,5 +9,11 @@
     - "2026.09"
     - "2026.08"
 
+- name: Robotics
+  children: []
+
+- name: "Grasping & Manipulation"
+  children: []
+
 - name: etc
   children: []
