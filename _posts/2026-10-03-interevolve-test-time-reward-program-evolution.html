@@ -1,0 +1,356 @@
+---
+layout: post
+title: "InterEvolve: Test-Time Evolution of Reward Programs for Humanoid Loco-Manipulation"
+description: "A technical review of InterEvolve: evolving staged reward programs at test time while keeping the humanoid controller frozen."
+date: 2026-10-03 23:20:00 -0400
+categories:
+  - Humanoid Robotics
+  - Reinforcement Learning
+tags:
+  - InterEvolve
+  - Humanoid
+  - Loco-Manipulation
+  - Reward Design
+  - Forward-Backward Representation
+  - CMA-ES
+  - Test-Time Adaptation
+math: true
+---
+
+<style>
+  .post-page{max-width:900px}
+  .paper-links{display:flex;flex-wrap:wrap;gap:10px;margin:22px 0 30px}
+  .paper-links a{border:1px solid var(--line);border-radius:999px;padding:7px 12px;font-family:var(--sans);font-size:.86rem}
+  .paper-figure{margin:34px 0}
+  .paper-figure img{width:100%;border:1px solid var(--line);border-radius:10px;background:#fff;display:block}
+  .paper-figure figcaption{margin-top:9px;color:var(--muted);font:0.84rem/1.5 var(--sans)}
+  .note-box{border-left:3px solid var(--link);padding:14px 18px;margin:28px 0;background:var(--surface)}
+  .note-box strong{font-family:var(--sans)}
+  .flow{display:grid;grid-template-columns:repeat(5,1fr);gap:8px;align-items:stretch;margin:28px 0}
+  .flow div{border:1px solid var(--line);border-radius:8px;padding:13px 10px;text-align:center;font-family:var(--sans);font-size:.82rem;background:var(--surface)}
+  .flow .arrow{border:none;background:transparent;display:flex;align-items:center;justify-content:center;color:var(--muted);padding:0}
+  .table-wrap{overflow-x:auto;margin:24px 0 34px;border:1px solid var(--line);border-radius:9px}
+  .table-wrap table{min-width:690px;margin:0}
+  .table-wrap th{font-family:var(--sans);font-size:.8rem;color:var(--muted);background:var(--surface)}
+  .table-wrap th,.table-wrap td{padding:10px 12px}
+  .result-good{font-weight:700;color:var(--link)}
+  .equation-note{font-size:.95rem;color:var(--muted);margin-top:-8px}
+  .takeaways li{margin:.55em 0}
+  @media(max-width:700px){.flow{grid-template-columns:1fr}.flow .arrow{height:22px;transform:rotate(90deg)}.paper-links{gap:7px}.post-page{max-width:100%}}
+</style>
+
+<p class="eyebrow">Paper Review · Humanoid Loco-Manipulation · 2026</p>
+
+<div class="paper-links">
+  <a href="https://sirui-xu.github.io/InterEvolve/" target="_blank" rel="noopener">Project page ↗</a>
+  <a href="https://arxiv.org/abs/2610.02196" target="_blank" rel="noopener">arXiv ↗</a>
+  <a href="https://arxiv.org/html/2610.02196v1" target="_blank" rel="noopener">HTML paper ↗</a>
+</div>
+
+<p>
+  <strong>InterEvolve</strong>는 새로운 humanoid loco-manipulation task가 들어왔을 때
+  controller를 다시 학습시키는 대신, <strong>task를 표현하는 reward program 자체를 test time에 진화</strong>시키는 방법이다.
+  핵심 아이디어는 이미 넓은 motor repertoire를 가진 behavioral foundation model이 있다면,
+  새로운 행동을 만들기 위해 policy weights를 바꾸는 대신 그 능력을 꺼내는 <em>task interface</em>를 바꾸자는 것이다.
+</p>
+
+<figure class="paper-figure">
+  <img src="https://sirui-xu.github.io/InterEvolve/assets/hero/hero-wall-desktop.jpg" alt="InterEvolve humanoid box manipulation overview">
+  <figcaption>
+    InterEvolve project page의 시뮬레이션 장면. 하나의 고정된 humanoid controller가 여러 box manipulation task를 수행한다.
+    Source: InterEvolve project page.
+  </figcaption>
+</figure>
+
+<div class="note-box">
+  <strong>핵심 한 줄:</strong>
+  <span> controller는 고정하고, LLM이 multi-stage reward program의 구조를 수정하며 CMA-ES가 숫자 파라미터를 튜닝한다. 실행 결과는 fixed verifier가 평가하고, 성공한 program은 skill library에 저장된다.</span>
+</div>
+
+<h2>1. 왜 reward program인가?</h2>
+
+<p>
+  기존 humanoid control interface는 motion reference, goal state, skill label처럼 “무엇을 따라갈지”를 직접 지정하는 경우가 많다.
+  하지만 box를 기울여 다른 면으로 세우기, 좁은 gate 사이로 밀기, 손을 쓰지 않고 발로 차기 같은 접촉 중심 task는
+  단일 goal state만으로는 행동 전략을 충분히 표현하기 어렵다.
+</p>
+
+<p>
+  InterEvolve는 task를 여러 stage로 분해하고 각 stage마다 reward와 종료 조건을 부여한다.
+  reward program은 다음과 같이 쓸 수 있다.
+</p>
+
+<p>\[
+P = \left(\boldsymbol{\theta},\{(r_j,g_j)\}_{j=1}^{J}\right)
+\]</p>
+
+<p>
+  여기서 $r_j$는 stage $j$의 reward function, $g_j$는 stage completion condition,
+  $\boldsymbol{\theta}$는 reward weight, tolerance, kernel width, threshold와 같은 tunable constants다.
+  예를 들어 “box에 접근 → 두 손 접촉 → 들어올림 → 이동 → 내려놓고 손 떼기”를 하나의 program으로 표현할 수 있다.
+</p>
+
+<div class="flow" aria-label="InterEvolve pipeline">
+  <div>Task $\ell$ + Scene $c$</div><div class="arrow">→</div>
+  <div>Reward Program $P$</div><div class="arrow">→</div>
+  <div>Latent Prompt $z$</div>
+</div>
+<div class="flow" aria-label="InterEvolve execution and verification">
+  <div>Frozen Controller $\pi$</div><div class="arrow">→</div>
+  <div>Trajectory $\tau$</div><div class="arrow">→</div>
+  <div>Verifier $\mathcal{C}(\tau)$</div>
+</div>
+
+<h2>2. Forward–Backward behavioral foundation model</h2>
+
+<p>
+  reward를 바꿀 때마다 RL을 다시 돌리면 reward search 자체가 너무 느려진다.
+  InterEvolve는 이를 피하기 위해 forward–backward(FB) representation을 사용한다.
+  latent $\boldsymbol z$가 하나의 policy behavior를 가리키고, forward map $F$와 backward map $B$가
+  discounted future-state occupancy를 factorize한다.
+</p>
+
+<p>\[
+M^{\pi_{\boldsymbol z}}(d\boldsymbol s'\mid \boldsymbol s,\boldsymbol a)
+\approx
+F(\boldsymbol s,\boldsymbol a,\boldsymbol z)^\top
+B(\boldsymbol s')\,\rho(d\boldsymbol s')
+\]</p>
+
+<p>
+  그러면 새로운 reward $r$에 대한 action value는 다음처럼 latent projection으로 근사된다.
+</p>
+
+<p>\[
+Q_r^{\pi_{\boldsymbol z}}(\boldsymbol s,\boldsymbol a)
+\approx
+F(\boldsymbol s,\boldsymbol a,\boldsymbol z)^\top \widetilde{\boldsymbol z}_r,
+\qquad
+\widetilde{\boldsymbol z}_r
+=
+\mathbb E_{\rho}\left[r(\boldsymbol s')B(\boldsymbol s')\right]
+\]</p>
+
+<p>
+  중요한 점은 <strong>새 reward가 들어와도 policy를 재학습하지 않고 latent prompt만 다시 계산</strong>한다는 것이다.
+  이것이 reward program을 여러 번 수정하고 바로 rollout으로 검증할 수 있게 해준다.
+</p>
+
+<h3>Reward inference bank와 reward tilt</h3>
+
+<p>
+  실제 시스템은 pretraining replay에서 뽑은 state bank $\mathcal B=\{\boldsymbol s_n\}_{n=1}^{N}$를 고정해 두고,
+  각 stage reward를 bank state에 평가해 latent prompt를 만든다.
+</p>
+
+<p>\[
+\boldsymbol z_{j,t}=
+\operatorname{proj}\left(
+\sum_{n=1}^{N}\alpha_{j,n,t}B(\boldsymbol s_n)
+\right),
+\qquad
+\alpha_{j,n,t}\propto
+\hat r_{j,n,t}\exp(\beta\hat r_{j,n,t})
+\]</p>
+
+<p class="equation-note">
+  $\beta$는 high-reward states에 얼마나 강하게 집중할지를 정한다. kicking처럼 training data에서 드문 행동은 관련 state가 적기 때문에
+  uniform averaging보다 적절한 reward tilt가 중요하다.
+</p>
+
+<h2>3. Object-aware residual: body prior는 얼리고 object interaction만 확장</h2>
+
+<p>
+  기존 body-only FB model은 robot body motion은 잘 표현해도 “같은 body motion인데 object goal만 다른” task를 구분하기 어렵다.
+  InterEvolve는 body prior를 freeze한 채 object-conditioned residual branch를 actor, forward map, backward map에 추가한다.
+</p>
+
+<p>\[
+\boldsymbol\mu_{\pi}(\boldsymbol o_t,\boldsymbol z)
+=
+\tanh\!\left(
+\boldsymbol\mu_{\mathrm{prior}}(\boldsymbol o^{\mathrm{body}}_t,\boldsymbol z)
++
+\boldsymbol\Delta_{\mu}(\boldsymbol o_t,\boldsymbol z)
+\right)
+\]</p>
+
+<p>
+  여기서 $\boldsymbol\mu_{\mathrm{prior}}$는 frozen body behavior를 보존하고,
+  $\boldsymbol\Delta_{\mu}$가 object position/orientation/velocity와 body-link-to-object geometry를 사용해 interaction을 보정한다.
+  구조적으로 보면 <strong>BC/RL residual policy와 비슷한 분업</strong>이다. 큰 motor prior는 유지하고 object interaction competence만 residual branch에 학습한다.
+</p>
+
+<h2>4. 핵심 알고리즘: LLM outer loop + CMA-ES inner loop</h2>
+
+<figure class="paper-figure">
+  <img src="https://arxiv.org/html/2610.02196v1/method_overview.png" alt="InterEvolve method overview">
+  <figcaption>
+    Paper Figure 2. LLM이 reward program 구조를 수정하고, FB motor model이 retraining 없이 실행하며,
+    fixed verifier의 rollout feedback이 다음 revision을 유도한다. Constants는 CMA-ES가 별도의 inner loop에서 튜닝한다.
+    Source: Lin et al., InterEvolve, arXiv:2610.02196.
+  </figcaption>
+</figure>
+
+<p>
+  InterEvolve의 search는 두 종류의 변수를 분리한다.
+</p>
+
+<ul class="takeaways">
+  <li><strong>Structure:</strong> 어떤 stage를 둘지, 어떤 reward term을 쓸지, 언제 stage를 넘어갈지 → LLM agent가 수정</li>
+  <li><strong>Constants $\boldsymbol\theta$:</strong> reward weights, thresholds, tolerances → CMA-ES가 numerical search</li>
+</ul>
+
+<p>
+  각 candidate는 하나의 scenario가 아니라 여러 randomized scenario에서 parallel rollout된다.
+  verifier는 reward program과 독립적으로 고정되어 있어, agent가 evaluator 자체를 느슨하게 바꾸는 것을 막는다.
+  candidate가 현재 best program보다 충분히 좋아졌을 때만 교체되고, 최종 program은 skill library에 저장된다.
+</p>
+
+<h2>5. 결과: reward formulation이 controller의 잠재 능력을 얼마나 꺼내는가</h2>
+
+<h3>Reference tracking</h3>
+
+<div class="table-wrap">
+<table>
+  <thead><tr><th>Controller</th><th>Evolving</th><th>$E_h$ ↓ (cm)</th><th>$E_o$ ↓ (cm)</th><th>SR ↑</th></tr></thead>
+  <tbody>
+    <tr><td>ULTRA</td><td>No</td><td>15.68</td><td>21.45</td><td>66%</td></tr>
+    <tr><td>BFM-Zero</td><td>No</td><td>28.36</td><td>62.33</td><td>8%</td></tr>
+    <tr><td>InterEvolve motor model</td><td>No</td><td>27.20</td><td>30.80</td><td>60%</td></tr>
+    <tr><td><strong>InterEvolve</strong></td><td><strong>Yes</strong></td><td class="result-good">19.80</td><td>24.92</td><td class="result-good">72%</td></tr>
+  </tbody>
+</table>
+</div>
+
+<p>
+  dedicated tracking policy인 ULTRA가 body/object error는 가장 낮지만, evolved reward를 적용한 InterEvolve는
+  held-out tracking success rate에서 72%로 ULTRA의 66%를 넘어선다. 저자들은 world-frame drift를 actor가 직접 볼 수 없는 문제를
+  object-anchored drift correction reward로 해결한 것이 주요 원인이라고 설명한다.
+</p>
+
+<h3>Goal-conditioned loco-manipulation</h3>
+
+<div class="table-wrap">
+<table>
+  <thead><tr><th>Program</th><th>CMA-ES Tune</th><th>Structural Evolution</th><th>SR ↑</th><th>Earned ↑</th><th>GPU-h</th></tr></thead>
+  <tbody>
+    <tr><td>Human-written</td><td>No</td><td>No</td><td>8.0%</td><td>65.2%</td><td>–</td></tr>
+    <tr><td>Initial LLM</td><td>No</td><td>No</td><td>32.2%</td><td>73.3%</td><td>–</td></tr>
+    <tr><td>Human-written</td><td>Yes</td><td>No</td><td>18.0%</td><td>75.2%</td><td>0.6</td></tr>
+    <tr><td>Initial LLM</td><td>Yes</td><td>No</td><td>34.6%</td><td>82.5%</td><td>0.6</td></tr>
+    <tr><td><strong>InterEvolve</strong></td><td><strong>Yes</strong></td><td><strong>Yes</strong></td><td class="result-good">86.5%</td><td class="result-good">95.6%</td><td>2.1</td></tr>
+  </tbody>
+</table>
+</div>
+
+<p>
+  가장 중요한 비교는 tuned initial LLM program의 34.6%와 full InterEvolve의 86.5%다.
+  단순히 reward coefficient를 잘 고르는 것만으로는 충분하지 않고, <strong>무엇을 reward할지와 task를 어떤 stage로 분해할지 자체가 성능을 제한</strong>한다.
+</p>
+
+<h3>Ablation: 가장 중요한 구성요소는 multi-stage와 numerical calibration</h3>
+
+<div class="table-wrap">
+<table>
+  <thead><tr><th>Variant</th><th>SR ↑</th><th>Earned ↑</th></tr></thead>
+  <tbody>
+    <tr><td>Full InterEvolve</td><td class="result-good">86.5%</td><td class="result-good">95.6%</td></tr>
+    <tr><td>No CMA-ES tuning</td><td>51.6%</td><td>89.9%</td></tr>
+    <tr><td>No targeted edits</td><td>68.9%</td><td>92.3%</td></tr>
+    <tr><td>Single-scenario evaluation</td><td>68.4%</td><td>89.9%</td></tr>
+    <tr><td>No scene context</td><td>78.7%</td><td>93.2%</td></tr>
+    <tr><td><strong>Single-stage only</strong></td><td><strong>44.7%</strong></td><td>86.9%</td></tr>
+  </tbody>
+</table>
+</div>
+
+<p>
+  single-stage 제약이 가장 큰 성능 하락을 만든다. 이는 humanoid loco-manipulation에서 “한 개의 완벽한 reward function”보다
+  <strong>접근 → 접촉 → 운반 → 해제처럼 contact mode를 명시적으로 phase로 나누는 것</strong>이 중요하다는 결과로 볼 수 있다.
+</p>
+
+<h2>6. 어떤 task까지 풀었나?</h2>
+
+<div class="table-wrap">
+<table>
+  <thead><tr><th>Task family</th><th>Initial agent + CMA</th><th>InterEvolve</th></tr></thead>
+  <tbody>
+    <tr><td>Push to mark</td><td>100.0%</td><td>100.0%</td></tr>
+    <tr><td>Carry at mid height</td><td>40.6%</td><td>100.0%</td></tr>
+    <tr><td>Carry at chest height</td><td>0.0%</td><td>100.0%</td></tr>
+    <tr><td>Tip onto a new face</td><td>0.0%</td><td>95.3%</td></tr>
+    <tr><td>Push through a gate</td><td>25.0%</td><td>73.4%</td></tr>
+    <tr><td>Push around an obstacle</td><td>4.7%</td><td>71.9%</td></tr>
+    <tr><td>Kicking to mark</td><td>37.5%</td><td>59.4%</td></tr>
+    <tr><td>Lift to support</td><td>68.8%</td><td>92.2%</td></tr>
+  </tbody>
+</table>
+</div>
+
+<p>
+  특히 chest-height carry, box tipping, obstacle avoidance처럼 fixed reward가 거의 실패하는 task에서 구조적 reward evolution의 효과가 크다.
+  kicking은 가장 어려운 task인데, pretraining data에 kick-like behavior가 희소하기 때문에 reward search만으로 완전히 해결되지는 않는다.
+</p>
+
+<h2>7. Skill library: test-time 경험을 weight가 아니라 program으로 축적</h2>
+
+<p>
+  성공한 reward program은 scene, verifier 결과, tuned constants와 함께 text 형태의 skill library에 저장된다.
+  이후 새로운 task에서 LLM은 이 program들을 retrieve해서 복사하거나 조합하거나 수정한다.
+  예를 들어 “push → release → kick” 같은 composite task는 이전 push/kick program을 재사용해 search를 시작할 수 있다.
+</p>
+
+<p>
+  이 부분이 흥미로운 이유는 skill accumulation이 neural weights 안에만 존재하지 않는다는 점이다.
+  controller는 그대로이고, <strong>inspectable task knowledge가 reward program이라는 외부 표현으로 축적</strong>된다.
+  따라서 planning/reasoning과 motor control의 update timescale을 분리할 수 있다.
+</p>
+
+<h2>8. Generalization과 real Unitree G1 deployment</h2>
+
+<p>
+  project page에서는 동일 reward program을 goal 위치나 initial box pose를 바꿔도 그대로 실행하고,
+  large box에서 얻은 program을 plastic box, small box, suitcase로 adaptation하는 결과를 보여준다.
+  또한 selected programs는 physical Unitree G1에서 egocentric RGB-D perception과 object pose estimation을 사용해 실행된다.
+</p>
+
+<p>
+  실제 robot에서는 torso RGB-D, FastSAM/CLIP 기반 box detection, FoundationPose 기반 6-D pose tracking,
+  LiDAR 및 contact/floor constraints를 결합한 state estimation을 사용하며 controller는 50 Hz로 동작한다.
+</p>
+
+<h2>9. 이 논문의 의미</h2>
+
+<ul class="takeaways">
+  <li><strong>Policy learning과 task adaptation을 분리했다.</strong> motor model은 한 번 pretrain하고, 새로운 task는 reward program search로 푼다.</li>
+  <li><strong>Test-time compute를 robotics에 명확하게 적용했다.</strong> 더 많은 rollout과 program revision이 더 나은 task solution으로 연결된다.</li>
+  <li><strong>Reward는 training signal뿐 아니라 control interface가 될 수 있다.</strong> FB representation 덕분에 reward가 즉시 latent prompt로 변환된다.</li>
+  <li><strong>Multi-stage structure가 매우 중요하다.</strong> contact-rich task는 single reward보다 phase decomposition이 훨씬 강하다.</li>
+  <li><strong>Skill memory가 text/program 형태로 남는다.</strong> 이후 task에서 inspectable하고 재사용 가능한 experience가 된다.</li>
+</ul>
+
+<h2>10. 한계와 내가 보는 핵심 질문</h2>
+
+<p>
+  저자들이 명시한 가장 큰 한계는 reward evolution이 <strong>이미 controller가 가진 motor repertoire와 reward-inference bank의 coverage를 넘을 수 없다는 것</strong>이다.
+  실제로 kicking처럼 pretraining에서 희소한 behavior의 성능은 상대적으로 낮다.
+  또한 한 task family의 full evolution에 약 2.1 GPU-hours와 LLM inference가 필요해 physical execution 중 real-time replanning 용도로는 아직 어렵다.
+</p>
+
+<div class="note-box">
+  <strong>Research takeaway:</strong>
+  <span>
+    이 접근은 “foundation policy를 계속 fine-tune해야 하는가?”에 다른 답을 준다. 충분히 넓은 motor prior가 있다면,
+    task-specific learning의 일부를 <em>weight update</em>가 아니라 <em>reward-program search</em>로 옮길 수 있다.
+    앞으로는 이 reward-program layer와 VLA planner, residual RL, real-world online adaptation을 어떻게 연결할지가 중요한 연구 포인트다.
+  </span>
+</div>
+
+<h2>References</h2>
+
+<ol>
+  <li>Zhuo Lin, Sirui Xu, Liuyu Bian, Yu-Xiong Wang, Liang-Yan Gui. <em>InterEvolve: Test-Time Evolution of Reward Programs for Humanoid Loco-Manipulation.</em> arXiv:2610.02196, 2026.</li>
+  <li><a href="https://sirui-xu.github.io/InterEvolve/" target="_blank" rel="noopener">InterEvolve project page</a></li>
+  <li><a href="https://arxiv.org/abs/2610.02196" target="_blank" rel="noopener">arXiv abstract and paper</a></li>
+</ol>
