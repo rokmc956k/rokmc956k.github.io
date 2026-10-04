@@ -1,0 +1,123 @@
+---
+layout: post
+title: "[Template] Deep Research"
+description: "Canonical template for deep technical research reports: evidence taxonomy, theory, landscape, detailed analysis, trade-offs, engineering recommendations, experiment plans, risks, and conclusions."
+date: 2026-10-04 15:20:00 -0400
+lang: en
+permalink: /posts/template-deep-research/
+template_page: true
+categories:
+  - Template
+  - Deep Research
+tags:
+  - template
+  - deep-research
+math: true
+---
+
+<p class="eyebrow">Template · Deep Research</p>
+
+<div class="paper-note"><strong>Purpose.</strong> Use this as the canonical starting point for in-depth technical research posts. The report should separate source-backed evidence from inference, connect theory to deployment constraints, and end with concrete engineering recommendations and experiments.</div>
+
+<h2>Document metadata</h2>
+<ul>
+  <li><strong>Topic</strong></li>
+  <li><strong>Research question</strong></li>
+  <li><strong>Author / Owner</strong></li>
+  <li><strong>Audience</strong></li>
+  <li><strong>Reference date / Last updated</strong></li>
+  <li><strong>Scope / Exclusions</strong></li>
+  <li><strong>Confidence:</strong> High / Medium / Low</li>
+</ul>
+
+<h2>Executive summary</h2>
+<p>State the core conclusion, strongest evidence, engineering or strategic recommendation, and the most important unresolved risk. A reader should be able to make a preliminary decision from this section alone.</p>
+
+<h2>1. Problem definition</h2>
+
+<h3>1.1 Background</h3>
+<p>Explain why the topic matters and what decision or technical uncertainty motivates the research.</p>
+
+<h3>1.2 Research questions</h3>
+<p>List explicit questions that the report will answer.</p>
+
+<h3>1.3 Terminology and assumptions</h3>
+<p>Define important terms, operating assumptions, constraints, and exclusions before comparing methods.</p>
+
+<h3>1.4 Evidence taxonomy</h3>
+<ul>
+  <li><strong>[Paper evidence]</strong> — peer-reviewed paper or preprint result.</li>
+  <li><strong>[Official documentation]</strong> — project, vendor, repository, or product documentation.</li>
+  <li><strong>[Company claim]</strong> — company announcement/demo/benchmark not independently verified.</li>
+  <li><strong>[Inference]</strong> — analysis derived from the available evidence.</li>
+  <li><strong>[Experiment proposal]</strong> — a test proposed to resolve uncertainty.</li>
+</ul>
+<p>Use these labels inline whenever evidence strength changes how a conclusion should be interpreted.</p>
+
+<h2>2. Theory and technical foundations</h2>
+<ul>
+  <li>Core definitions</li>
+  <li>Equations and variable definitions</li>
+  <li>Compute complexity, latency, and memory</li>
+  <li>Conditions under which the theory breaks in a real system</li>
+</ul>
+
+<h2>3. Related work and current landscape</h2>
+<div class="paper-table-wrap">
+<table>
+<thead><tr><th>Approach</th><th>Architecture / Data</th><th>Reported Results</th><th>Strengths</th><th>Limitations</th><th>Source</th></tr></thead>
+<tbody><tr><td>Method A</td><td>—</td><td>—</td><td>—</td><td>—</td><td>[1]</td></tr></tbody>
+</table>
+</div>
+
+<h2>4. Detailed analysis</h2>
+<h3>4.1 Architecture</h3>
+<h3>4.2 Training and data</h3>
+<h3>4.3 Inference and deployment</h3>
+<h3>4.4 Evaluation and generalization</h3>
+<h3>4.5 Safety and reliability</h3>
+<p>Analyze each layer with the level of detail needed to support an engineering decision, not just a literature summary.</p>
+
+<h2>5. Trade-offs</h2>
+<h3>Advantages</h3>
+<h3>Disadvantages</h3>
+<h3>Limitations</h3>
+<h3>Failure modes</h3>
+<p>Failure modes should include trigger conditions and practical consequences where possible.</p>
+
+<h2>6. Engineering recommendations</h2>
+<ul>
+  <li>Recommended default</li>
+  <li>Data requirements</li>
+  <li>Model modification order</li>
+  <li>Implementation stages</li>
+  <li>Fallback and rollback</li>
+</ul>
+
+<h2>7. Experiment plan</h2>
+<div class="paper-table-wrap">
+<table>
+<tbody>
+<tr><th>Hypothesis</th><td>Testable hypothesis</td></tr>
+<tr><th>Baseline</th><td>Reference implementation</td></tr>
+<tr><th>Independent variables</th><td>Variables to change or sweep</td></tr>
+<tr><th>Metrics</th><td>Primary and secondary metrics</td></tr>
+<tr><th>Dataset splits</th><td>Train / validation / test / OOD</td></tr>
+<tr><th>Statistical test</th><td>CI / bootstrap / significance / sample-count rule</td></tr>
+<tr><th>Promotion / rejection criteria</th><td>Explicit decision thresholds</td></tr>
+</tbody>
+</table>
+</div>
+
+<h2>8. Risks, gaps, and open questions</h2>
+<p>Separate known risks, missing evidence, unresolved implementation gaps, and research questions.</p>
+
+<h2>9. Conclusions and implications</h2>
+<p>Answer the original research question directly, distinguish evidence-backed conclusions from inference, and state what should happen next.</p>
+
+<div class="paper-note"><strong>Decision:</strong> Adopt / prototype / investigate further / reject — with a brief rationale and confidence level.</div>
+
+<h2>References</h2>
+<p>Use numbered references and link directly to the primary paper, official documentation, repository, benchmark, dataset, or other source used in the analysis.</p>
+
+<div class="paper-note"><strong>Canonical source.</strong> Copy <code>_templates/deep-research-post.html</code> when starting a new Deep Research post. Preserve this section structure unless the topic genuinely requires a different organization.</div>
