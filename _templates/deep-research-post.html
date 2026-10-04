@@ -1,0 +1,167 @@
+---
+layout: post
+title: "[Deep Research] [Topic]"
+description: "[One-sentence summary of the research question and conclusion.]"
+date: YYYY-MM-DD HH:MM:SS -0400
+lang: en
+deep_research: true
+research_topic: "[VLA / RL / Other topic]"
+research_question: "[Primary question this report answers]"
+audience: "[Research / Engineering / Leadership]"
+reference_date: "[YYYY-MM-DD]"
+confidence: "[High / Medium / Low]"
+categories:
+  - [Primary Domain]
+tags:
+  - deep-research
+  - [keyword-1]
+math: true
+---
+
+<div class="paper-note"><strong>Research question:</strong> [State the question precisely.]</div>
+
+<h2>Document metadata</h2>
+<table>
+  <tbody>
+    <tr><th>Topic</th><td>[Topic]</td></tr>
+    <tr><th>Research question</th><td>[Question]</td></tr>
+    <tr><th>Author / Owner</th><td>[Name / team]</td></tr>
+    <tr><th>Audience</th><td>[Audience]</td></tr>
+    <tr><th>Reference date</th><td>[YYYY-MM-DD]</td></tr>
+    <tr><th>Last updated</th><td>[YYYY-MM-DD]</td></tr>
+    <tr><th>Scope / Exclusions</th><td>[What is included and intentionally excluded]</td></tr>
+    <tr><th>Confidence</th><td>High / Medium / Low</td></tr>
+  </tbody>
+</table>
+
+<h2>Executive summary</h2>
+<ul>
+  <li><strong>Core conclusion:</strong> [Most important answer]</li>
+  <li><strong>Strongest evidence:</strong> [Best supporting evidence]</li>
+  <li><strong>Engineering / strategic recommendation:</strong> [Recommended action]</li>
+  <li><strong>Unresolved risk:</strong> [Most important uncertainty]</li>
+</ul>
+
+<h2>1. Problem definition</h2>
+
+<h3>1.1 Background</h3>
+<p>[Context, motivation, and why the problem matters.]</p>
+
+<h3>1.2 Research questions</h3>
+<ol>
+  <li>[Primary research question]</li>
+  <li>[Secondary question]</li>
+  <li>[Decision question, if applicable]</li>
+</ol>
+
+<h3>1.3 Terminology and assumptions</h3>
+<p>[Define key terms, operating assumptions, constraints, and exclusions.]</p>
+
+<h3>1.4 Evidence taxonomy</h3>
+<ul>
+  <li><strong>[Paper evidence]</strong> Peer-reviewed paper or preprint result.</li>
+  <li><strong>[Official documentation]</strong> Vendor/project/repository documentation.</li>
+  <li><strong>[Company claim]</strong> Company announcement, demo, benchmark, or marketing statement not independently verified.</li>
+  <li><strong>[Inference]</strong> Analysis derived from available evidence.</li>
+  <li><strong>[Experiment proposal]</strong> A test suggested to resolve an uncertainty.</li>
+</ul>
+<p>Use these labels inline whenever source strength materially affects the conclusion.</p>
+
+<h2>2. Theory and technical foundations</h2>
+<ul>
+  <li><strong>Core definitions:</strong> [Definitions needed for the report]</li>
+  <li><strong>Equations and variables:</strong> [Only equations that clarify the mechanism]</li>
+  <li><strong>Complexity / latency / memory:</strong> [Relevant computational constraints]</li>
+  <li><strong>Where theory breaks:</strong> [Conditions under which assumptions fail in a real system]</li>
+</ul>
+
+<p>$$
+[\text{key equation, if useful}]
+$$</p>
+
+<h2>3. Related work and current landscape</h2>
+<div class="paper-table-wrap">
+<table>
+  <thead><tr><th>Approach</th><th>Architecture / Data</th><th>Reported Results</th><th>Strengths</th><th>Limitations</th><th>Source</th></tr></thead>
+  <tbody>
+    <tr><td>[Method A]</td><td>[...]</td><td>[...]</td><td>[...]</td><td>[...]</td><td>[1]</td></tr>
+  </tbody>
+</table>
+</div>
+
+<h2>4. Detailed analysis</h2>
+
+<h3>4.1 Architecture</h3>
+<p>[System/model architecture, module boundaries, interfaces, data/control flow.]</p>
+
+<figure class="paper-figure">
+  <div class="paper-figure-placeholder">[Architecture / data flow / system diagram]</div>
+  <figcaption>[Explain what matters and cite the source if adapted.]</figcaption>
+</figure>
+
+<h3>4.2 Training and data</h3>
+<p>[Datasets, collection method, licenses, preprocessing, objective, optimization, fine-tuning, compute.]</p>
+
+<h3>4.3 Inference and deployment</h3>
+<p>[Runtime path, latency, hardware, memory, batching, quantization, serving/deployment constraints.]</p>
+
+<h3>4.4 Evaluation and generalization</h3>
+<p>[Benchmarks, metrics, OOD tests, ablations, real/sim evidence, statistical reliability.]</p>
+
+<h3>4.5 Safety and reliability</h3>
+<p>[Failure handling, constraints, fallback behavior, uncertainty, monitoring, safety assumptions.]</p>
+
+<h2>5. Trade-offs</h2>
+
+<h3>Advantages</h3>
+<ul><li>[Advantage]</li></ul>
+
+<h3>Disadvantages</h3>
+<ul><li>[Disadvantage]</li></ul>
+
+<h3>Limitations</h3>
+<ul><li>[Limitation]</li></ul>
+
+<h3>Failure modes</h3>
+<ul><li>[Failure mode and trigger condition]</li></ul>
+
+<h2>6. Engineering recommendations</h2>
+<ul>
+  <li><strong>Recommended default:</strong> [Preferred baseline/design]</li>
+  <li><strong>Data requirements:</strong> [Minimum data / coverage / labeling]</li>
+  <li><strong>Model modification order:</strong> [Lowest-risk change sequence]</li>
+  <li><strong>Implementation stages:</strong> [Prototype → validation → deployment]</li>
+  <li><strong>Fallback / rollback:</strong> [Recovery path if the approach fails]</li>
+</ul>
+
+<h2>7. Experiment plan</h2>
+<div class="paper-table-wrap">
+<table>
+  <tbody>
+    <tr><th>Hypothesis</th><td>[Testable hypothesis]</td></tr>
+    <tr><th>Baseline</th><td>[Baseline implementation]</td></tr>
+    <tr><th>Independent variables</th><td>[Variables to sweep/change]</td></tr>
+    <tr><th>Metrics</th><td>[Primary + secondary metrics]</td></tr>
+    <tr><th>Dataset splits</th><td>[Train / validation / test / OOD]</td></tr>
+    <tr><th>Statistical test</th><td>[CI / bootstrap / significance test / sample-count rule]</td></tr>
+    <tr><th>Promotion / rejection criteria</th><td>[Decision thresholds]</td></tr>
+  </tbody>
+</table>
+</div>
+
+<h2>8. Risks, gaps, and open questions</h2>
+<ul>
+  <li><strong>Risk:</strong> [Risk and impact]</li>
+  <li><strong>Evidence gap:</strong> [What is not yet known]</li>
+  <li><strong>Open question:</strong> [Question requiring research or experiment]</li>
+</ul>
+
+<h2>9. Conclusions and implications</h2>
+<p>[Answer the original research question. Separate evidence-backed conclusions from inference, and state what should happen next.]</p>
+
+<div class="paper-note"><strong>Decision:</strong> [Adopt / prototype / investigate further / reject] — [brief rationale].</div>
+
+<h2>References</h2>
+<ol>
+  <li>[Title / organization] — <a href="[URL]">source</a></li>
+</ol>
