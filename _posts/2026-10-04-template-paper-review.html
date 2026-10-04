@@ -1,0 +1,165 @@
+---
+layout: post
+title: "[Template] Paper Review"
+description: "Canonical template for future Paper Review posts: metadata, technical narrative, equations, architecture, experiments, interpretation, limitations, and references."
+date: 2026-10-04 15:10:00 -0400
+lang: en
+permalink: /posts/template-paper-review/
+template_page: true
+categories:
+  - Template
+  - Paper Review
+tags:
+  - template
+  - paper-review
+math: true
+---
+
+<p class="eyebrow">Template · Paper Review</p>
+
+<div class="paper-note">
+  <strong>Purpose.</strong> This is the canonical structure for future Paper Review posts on this site. It combines the strongest patterns used in the InterEvolve and decMHT reviews: a concise thesis up front, visual/quantitative evidence, mathematical detail, implementation context, critical interpretation, and explicit limitations.
+</div>
+
+<h2>1. Required front matter</h2>
+
+<p>Every new Paper Review should start with the following metadata. The shared post layout automatically renders the standardized source header from these fields.</p>
+
+<pre><code>---
+layout: post
+title: "Paper title: short technical subtitle"
+description: "One-sentence technical summary."
+date: YYYY-MM-DD HH:MM:SS -0400
+lang: en
+paper_review: true
+paper_topic: "Short Technical Topic"
+paper_year: "2026"
+project_url: "https://example.github.io/project/"
+arxiv_url: "https://arxiv.org/abs/XXXX.XXXXX"
+html_paper_url: "https://arxiv.org/html/XXXX.XXXXX"
+code_url: "https://github.com/example/repo"   # optional
+categories:
+  - Primary Domain
+  - Secondary Domain
+tags:
+  - keyword-1
+  - keyword-2
+math: true
+---
+</code></pre>
+
+<p>The rendered paper header must remain consistent:</p>
+
+<div class="paper-template-preview">
+  <p class="paper-review-kicker">Paper Review · Short Technical Topic · 2026</p>
+  <div class="paper-review-links">
+    <span>Project page ↗</span><span>arXiv ↗</span><span>HTML paper ↗</span>
+  </div>
+</div>
+
+<h2>2. Opening: explain the paper in two or three paragraphs</h2>
+
+<p>The first paragraphs should answer three questions immediately: <strong>what problem is being solved, what is the central idea, and why is the result interesting?</strong> Avoid beginning with implementation details. A reader should understand the paper's thesis before encountering notation.</p>
+
+<div class="paper-note"><strong>Core idea:</strong> summarize the paper's main technical move in one or two sentences. This box should be understandable even if the reader skips the rest of the article.</div>
+
+<h2>3. Optional KPI snapshot</h2>
+
+<p>When the paper has a few memorable experimental claims, surface them early. Use only numbers that materially help the reader understand scale, performance, generalization, or deployment.</p>
+
+<div class="paper-kpi-grid">
+  <div class="paper-kpi-card"><strong>[Metric]</strong><span>What this number means</span></div>
+  <div class="paper-kpi-card"><strong>[Scale]</strong><span>Robots / tasks / data / model size</span></div>
+  <div class="paper-kpi-card"><strong>[Result]</strong><span>Main reported improvement</span></div>
+  <div class="paper-kpi-card"><strong>[Hardware]</strong><span>Real-world platform or deployment</span></div>
+</div>
+
+<h2>4. Problem and motivation</h2>
+
+<p>Describe why the problem is hard and what breaks in prior approaches. Make the baseline assumptions explicit. For robotics papers, this often means clarifying observation/action spaces, contact or embodiment constraints, coordination assumptions, and the gap between simulation and hardware.</p>
+
+<h2>5. Core abstraction / architecture</h2>
+
+<p>Introduce the paper's main representation or system decomposition before diving into equations. Prefer a reconstructed diagram when it communicates the architecture more clearly than prose.</p>
+
+<figure class="paper-figure">
+  <div class="paper-figure-placeholder">[Architecture / data flow / control hierarchy diagram]</div>
+  <figcaption>Explain what the reader should notice. If the figure is adapted or reproduced from the paper/project page, state the source explicitly.</figcaption>
+</figure>
+
+<h2>6. Mathematical formulation</h2>
+
+<p>Include only equations that help explain the method. Define every symbol that is necessary for understanding the argument and connect each equation back to its physical or algorithmic meaning.</p>
+
+<p>Example:</p>
+
+<p>$$
+\mathbf{y}=f_{\theta}(\mathbf{x}),
+$$</p>
+
+<p>where $\mathbf{x}$ is the relevant state/observation, $f_\theta$ is the learned or optimized model, and $\mathbf{y}$ is the control/policy/task output. The paragraph after an equation should explain <em>why this equation matters</em>, not merely restate it.</p>
+
+<h3>6.1 Key mechanism</h3>
+
+<p>Break complicated methods into H3 subsections. The Contents panel automatically includes H2 and H3 headings, so descriptive subsection names make long technical reviews much easier to navigate.</p>
+
+<h2>7. Training / optimization / system pipeline</h2>
+
+<p>Document the practical recipe: algorithm, curriculum, losses or rewards, data flow, simulator, model initialization, parallelism, compute, fine-tuning stages, and any frozen vs. trainable components. Highlight choices that explain the reported behavior.</p>
+
+<div class="paper-note"><strong>Implementation detail worth remembering:</strong> capture one practical choice that would matter if you attempted to reproduce or adapt the work.</div>
+
+<h2>8. Experiments and results</h2>
+
+<p>Use a compact table for the most decision-relevant results. Do not reproduce every number from the paper. Prefer a smaller table that makes the central comparison obvious.</p>
+
+<div class="paper-table-wrap">
+<table>
+  <thead><tr><th>Method / setting</th><th>Main metric</th><th>Secondary metric</th><th>Interpretation</th></tr></thead>
+  <tbody>
+    <tr><td>Baseline</td><td>—</td><td>—</td><td>What the baseline reveals</td></tr>
+    <tr><td>Proposed</td><td><strong>—</strong></td><td>—</td><td>Why the improvement matters</td></tr>
+  </tbody>
+</table>
+</div>
+
+<h3>8.1 Generalization / ablation / scaling</h3>
+
+<p>Include the experiment that best tests the paper's central claim: unseen objects, larger team sizes, new tasks, real hardware, ablations, or robustness. Report enough context to avoid overstating the result.</p>
+
+<h2>9. Why this paper matters</h2>
+
+<p>This section is analytical rather than descriptive. Explain what capability or research direction the paper changes, which assumptions it relaxes, and where it fits relative to VLA, RL, humanoid control, manipulation, sim-to-real, or other relevant areas.</p>
+
+<h2>10. Limitations and open questions</h2>
+
+<ul>
+  <li><strong>Assumptions:</strong> What privileged information, fixed controller, simulator, object model, or task structure is required?</li>
+  <li><strong>Evaluation:</strong> Which settings are still missing?</li>
+  <li><strong>Scalability:</strong> What grows poorly with tasks, robots, data, or compute?</li>
+  <li><strong>Real-world gap:</strong> Which results remain simulation-only?</li>
+  <li><strong>Research question:</strong> What would be the most useful next experiment?</li>
+</ul>
+
+<h2>11. Takeaways</h2>
+
+<ul class="paper-takeaways">
+  <li><strong>One-sentence thesis:</strong> the main contribution in plain technical language.</li>
+  <li><strong>Most important mechanism:</strong> the idea worth reusing elsewhere.</li>
+  <li><strong>Strongest evidence:</strong> the experiment that best supports the claim.</li>
+  <li><strong>Main caveat:</strong> the limitation that most changes how the result should be interpreted.</li>
+</ul>
+
+<h2>12. References</h2>
+
+<ol>
+  <li>Paper title, authors, venue/year.</li>
+  <li><a href="#">Official project page</a>.</li>
+  <li><a href="#">arXiv abstract</a>.</li>
+  <li><a href="#">arXiv HTML paper</a>.</li>
+  <li>Official code repository / conference page when available.</li>
+</ol>
+
+<div class="paper-note">
+  <strong>Writing rule.</strong> Keep reported facts separate from interpretation. Attribute external figures and numerical results, reconstruct diagrams when useful, and always end with limitations rather than presenting the paper as universally solved.
+</div>
