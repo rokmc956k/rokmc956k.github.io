@@ -6,18 +6,20 @@ lang: en
 <section class="hero">
   <p class="eyebrow">Robotics / Physical AI</p>
   <h1>S. Lee</h1>
+  <!--
   <p class="role">Robotics / Physical AI Engineer</p>
   <p class="intro">I work on robot learning, vision-language-action models, reinforcement learning, humanoid robotics, manipulation, and sim-to-real.</p>
+  -->
   <p class="hero-links"><a href="https://github.com/rokmc956k">GitHub</a><span>·</span><a href="#posts">Posts</a></p>
 </section>
 
-<section id="posts" class="posts-section">
-  <div class="section-heading">
-    <h2>Posts</h2>
-    <span>English articles</span>
-  </div>
+<details id="posts" class="posts-section posts-disclosure" open>
+  <summary class="posts-summary">
+    <span class="posts-summary-title">Posts</span>
+    <span class="posts-summary-meta">English articles</span>
+  </summary>
 
-  <div class="post-list">
+  <div class="post-list posts-collapsible-content">
     {% assign has_english = false %}
     {% for post in site.posts %}
       {% unless post.lang == 'ko' %}
@@ -34,4 +36,4 @@ lang: en
     {% endfor %}
     {% unless has_english %}<p class="empty-state">No posts yet.</p>{% endunless %}
   </div>
-</section>
+</details>
