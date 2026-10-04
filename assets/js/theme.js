@@ -1,6 +1,6 @@
 (() => {
   const root = document.documentElement;
-  const button = document.querySelector('.theme-toggle');
+  const button = document.querySelector('button.theme-toggle');
   const label = document.querySelector('[data-theme-label]');
   const icon = document.querySelector('[data-theme-icon]');
   const saved = localStorage.getItem('theme');
