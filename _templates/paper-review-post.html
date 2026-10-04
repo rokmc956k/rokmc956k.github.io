@@ -20,11 +20,29 @@ tags:
 math: true
 ---
 
-<p><strong>[Paper Name]</strong> [In 2–3 paragraphs: what problem does it solve, what is the central idea, and why is the result important?]</p>
+<div class="paper-note"><strong>Review principle:</strong> keep the paper's claims separate from what the experiments actually demonstrate. Clearly distinguish reported facts, your interpretation, and what is still uncertain or unreproducible.</div>
+
+<h2>1. Bibliographic information</h2>
+<div class="paper-table-wrap">
+<table>
+  <tbody>
+    <tr><th>Title</th><td>[Full paper title]</td></tr>
+    <tr><th>Authors / institution</th><td>[Authors and affiliations]</td></tr>
+    <tr><th>Venue / arXiv</th><td>[Venue, arXiv ID]</td></tr>
+    <tr><th>Publication date</th><td>[YYYY-MM-DD]</td></tr>
+    <tr><th>Paper</th><td>[PDF / publisher link]</td></tr>
+    <tr><th>Project / GitHub</th><td>[Project page / official code]</td></tr>
+    <tr><th>Code / data license</th><td>[License and commercial-use notes]</td></tr>
+  </tbody>
+</table>
+</div>
+
+<h2>2. One-paragraph summary</h2>
+<p><strong>[Paper Name]</strong> [Explain in one compact paragraph: what problem is solved, what the central idea is, what changed versus prior work, and the strongest reported result.]</p>
 
 <div class="paper-note"><strong>Core idea:</strong> [One or two sentences capturing the main technical move.]</div>
 
-<!-- Optional: keep only if the paper has memorable quantitative claims. -->
+<!-- Optional: keep only when memorable quantitative claims help establish scale or performance. -->
 <div class="paper-kpi-grid">
   <div class="paper-kpi-card"><strong>[Metric]</strong><span>[Meaning]</span></div>
   <div class="paper-kpi-card"><strong>[Scale]</strong><span>[Meaning]</span></div>
@@ -32,67 +50,159 @@ math: true
   <div class="paper-kpi-card"><strong>[Hardware]</strong><span>[Meaning]</span></div>
 </div>
 
-<h2>1. Problem and motivation</h2>
-<p>[Why the problem is difficult. What fails in prior work? State key assumptions.]</p>
+<h2>3. Research problem</h2>
+<ul>
+  <li><strong>Prior limitation:</strong> [What existing approaches fail to handle]</li>
+  <li><strong>Research question:</strong> [What the paper is explicitly trying to answer]</li>
+  <li><strong>Task assumptions:</strong> [Observations, actions, environment, embodiment, supervision, simulator, etc.]</li>
+</ul>
 
-<h2>2. Core abstraction / architecture</h2>
-<p>[Explain the main representation or system decomposition before equations.]</p>
+<h2>4. Claimed contributions</h2>
+<ol>
+  <li>[Claimed contribution 1]</li>
+  <li>[Claimed contribution 2]</li>
+  <li>[Claimed contribution 3]</li>
+</ol>
+<p>Keep this section faithful to the authors' stated claims. Do not yet decide whether the evidence is sufficient; that is evaluated later under <em>Result validity</em>.</p>
+
+<h2>5. Method</h2>
+
+<h3>5.1 Architecture / core abstraction</h3>
+<p>[Explain the main representation, model decomposition, controller hierarchy, or system architecture before equations.]</p>
 
 <figure class="paper-figure">
   <div class="paper-figure-placeholder">[Architecture / data flow / control hierarchy diagram]</div>
-  <figcaption>[What should the reader notice? Add source attribution if adapted.]</figcaption>
+  <figcaption>[What should the reader notice? Add source attribution if adapted or reproduced.]</figcaption>
 </figure>
 
-<h2>3. Mathematical formulation</h2>
-<p>[Introduce only the equations needed to understand the method. Define symbols and explain physical/algorithmic meaning.]</p>
-
-<p>$$
-[\text{key equation}]
-$$</p>
-
-<h3>3.1 Key mechanism</h3>
-<p>[Break complicated mechanisms into H3 subsections.]</p>
-
-<h2>4. Training / optimization / system pipeline</h2>
-<p>[Algorithm, curriculum, losses/rewards, data flow, simulator, initialization, parallelism, compute, frozen vs trainable components.]</p>
-
-<div class="paper-note"><strong>Implementation detail worth remembering:</strong> [One practical choice that matters for reproduction or adaptation.]</div>
-
-<h2>5. Experiments and results</h2>
+<h3>5.2 Inputs / outputs</h3>
 <div class="paper-table-wrap">
 <table>
-  <thead><tr><th>Method / setting</th><th>Main metric</th><th>Secondary metric</th><th>Interpretation</th></tr></thead>
+  <thead><tr><th>Component</th><th>Input</th><th>Output</th><th>Role</th></tr></thead>
   <tbody>
-    <tr><td>Baseline</td><td>[—]</td><td>[—]</td><td>[What the baseline shows]</td></tr>
-    <tr><td>Proposed</td><td><strong>[—]</strong></td><td>[—]</td><td>[Why the improvement matters]</td></tr>
+    <tr><td>[Module]</td><td>[Observation / state / tokens]</td><td>[Action / latent / command]</td><td>[Why it exists]</td></tr>
   </tbody>
 </table>
 </div>
 
-<h3>5.1 Generalization / ablation / scaling</h3>
-<p>[Use the experiment that best tests the paper's central claim.]</p>
+<h3>5.3 Objective functions / reward / optimization target</h3>
+<p>[Introduce only the equations needed to understand the method. Define symbols and explain their physical or algorithmic meaning.]</p>
 
-<h2>6. Why this paper matters</h2>
-<p>[Your analysis: capability change, relaxed assumptions, relation to VLA/RL/humanoid/manipulation/sim-to-real.]</p>
+<p>$$
+\mathcal{L}=\cdots
+$$</p>
 
-<h2>7. Limitations and open questions</h2>
+<p><strong>Variables:</strong> [Define the important symbols and connect the equation to system behavior.]</p>
+
+<h3>5.4 Dataset and training</h3>
+<p>[Dataset, simulator, collection procedure, model initialization, algorithm, curriculum, losses/rewards, batch/parallelism, compute, fine-tuning stages, frozen vs. trainable components.]</p>
+
+<div class="paper-note"><strong>Implementation detail worth remembering:</strong> [One practical choice that matters for reproduction or adaptation.]</div>
+
+<h3>5.5 Inference procedure</h3>
+<p>[Step-by-step runtime flow. What information is available at deployment time? Which components run online? What is recurrent / iterative / closed-loop?]</p>
+
+<h2>6. Experiments and results</h2>
+<p>Report the smallest set of results needed to evaluate the central claim. Separate simulator-only evidence, real-world evidence, and author-defined internal benchmarks.</p>
+
+<div class="paper-table-wrap">
+<table>
+  <thead><tr><th>Benchmark / robot</th><th>Split / setting</th><th>Metric</th><th>Baseline</th><th>Proposed</th><th>Notes</th></tr></thead>
+  <tbody>
+    <tr><td>[Benchmark]</td><td>[Setting]</td><td>[Metric]</td><td>[—]</td><td><strong>[—]</strong></td><td>[Interpretation / caveat]</td></tr>
+  </tbody>
+</table>
+</div>
+
+<h3>6.1 Generalization / ablation / scaling</h3>
+<p>[Use the experiment that most directly tests the paper's central mechanism: unseen objects, larger team sizes, new tasks, real hardware, robustness, or ablation.]</p>
+
+<h2>7. Critical review</h2>
+
+<h3>7.1 Strengths</h3>
 <ul>
-  <li><strong>Assumptions:</strong> [Required privileged information / fixed components / task structure]</li>
-  <li><strong>Evaluation:</strong> [Missing settings or benchmarks]</li>
-  <li><strong>Scalability:</strong> [What grows poorly]</li>
-  <li><strong>Real-world gap:</strong> [Simulation-only or limited hardware evidence]</li>
-  <li><strong>Research question:</strong> [Most useful next experiment]</li>
+  <li>[Strong technical idea]</li>
+  <li>[Strong experimental evidence]</li>
+  <li>[Useful engineering or research property]</li>
 </ul>
 
-<h2>8. Takeaways</h2>
+<h3>7.2 Weaknesses</h3>
+<ul>
+  <li>[Methodological limitation]</li>
+  <li>[Evaluation limitation]</li>
+  <li>[Deployment or scalability limitation]</li>
+</ul>
+
+<h3>7.3 Hidden assumptions</h3>
+<ul>
+  <li>[Privileged state / calibration / object model / fixed controller / known task structure]</li>
+  <li>[Assumption that may not hold outside the reported benchmark]</li>
+</ul>
+
+<h2>8. Reproducibility assessment</h2>
+<div class="paper-table-wrap">
+<table>
+  <thead><tr><th>Item</th><th>Status</th><th>Notes</th></tr></thead>
+  <tbody>
+    <tr><td>Code completeness</td><td>[Good / Partial / Missing]</td><td>[What is released]</td></tr>
+    <tr><td>Checkpoints</td><td>[Available / Missing]</td><td>[Which models]</td></tr>
+    <tr><td>Dataset availability</td><td>[Available / Restricted / Missing]</td><td>[License / access]</td></tr>
+    <tr><td>Hyperparameters</td><td>[Complete / Partial]</td><td>[Missing values]</td></tr>
+    <tr><td>Hardware / compute cost</td><td>[Known / Estimated / Unknown]</td><td>[GPU / robot / training time]</td></tr>
+    <tr><td>Missing implementation details</td><td>[Low / Medium / High risk]</td><td>[What blocks reproduction]</td></tr>
+  </tbody>
+</table>
+</div>
+
+<h2>9. Result validity</h2>
+<ul>
+  <li><strong>Fair comparison:</strong> Are baselines trained and evaluated under comparable conditions?</li>
+  <li><strong>Statistics:</strong> Are sample count, variance, confidence intervals, or significance adequate?</li>
+  <li><strong>Sim / real gap:</strong> Which claims are supported on real hardware versus simulation only?</li>
+  <li><strong>Benchmark independence:</strong> Is the evaluation public/standard or internally constructed by the authors/company?</li>
+  <li><strong>Metric validity:</strong> Does the chosen metric actually represent task success or deployment usefulness?</li>
+  <li><strong>Claim-to-evidence match:</strong> Which claimed contributions are strongly supported, partially supported, or still speculative?</li>
+</ul>
+
+<h2>10. Why this paper matters</h2>
+<p>[Your analysis: what capability changes, which assumptions are relaxed, and how it fits into VLA, RL, humanoid control, manipulation, sim-to-real, or the relevant research landscape.]</p>
+
+<h2>11. Engineering takeaways</h2>
 <ul class="paper-takeaways">
-  <li><strong>One-sentence thesis:</strong> [Main contribution]</li>
-  <li><strong>Most important mechanism:</strong> [Reusable idea]</li>
-  <li><strong>Strongest evidence:</strong> [Best supporting experiment]</li>
-  <li><strong>Main caveat:</strong> [Most important limitation]</li>
+  <li><strong>Reusable idea:</strong> [What you would borrow for another system]</li>
+  <li><strong>Implementation lesson:</strong> [Practical recipe worth remembering]</li>
+  <li><strong>Deployment implication:</strong> [What changes for a real robot/system]</li>
+  <li><strong>Main caveat:</strong> [What must not be overlooked]</li>
 </ul>
 
-<h2>9. References</h2>
+<h2>12. Experiments to reproduce</h2>
+<ol>
+  <li>[Minimum experiment needed to verify the core claim]</li>
+  <li>[Ablation needed to isolate the central mechanism]</li>
+  <li>[Real-world or out-of-distribution experiment worth running]</li>
+</ol>
+
+<h2>13. Related papers</h2>
+<ul>
+  <li>[Closest predecessor and how it differs]</li>
+  <li>[Competing approach]</li>
+  <li>[Follow-up / complementary work]</li>
+</ul>
+
+<h2>14. Final verdict</h2>
+<div class="paper-table-wrap">
+<table>
+  <tbody>
+    <tr><th>Impact</th><td>[High / Medium / Low] — [why]</td></tr>
+    <tr><th>Confidence</th><td>[High / Medium / Low] — [confidence in the reported evidence]</td></tr>
+    <tr><th>Usefulness for current work</th><td>[High / Medium / Low] — [specific relevance]</td></tr>
+  </tbody>
+</table>
+</div>
+
+<p><strong>Bottom line:</strong> [One short paragraph separating what the paper convincingly establishes from what remains unproven.]</p>
+
+<h2>15. References</h2>
 <ol>
   <li>[Paper title, authors, venue/year]</li>
   <li><a href="[Official project page URL]">Official project page</a>.</li>
