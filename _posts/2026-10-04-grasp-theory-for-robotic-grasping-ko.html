@@ -1,0 +1,287 @@
+---
+layout: post
+title: "Grasp Theory: 로봇 파지 이론의 핵심"
+description: "접촉 기구학, friction cone, contact model, force closure, grasp matrix, hand Jacobian, internal force, grasp quality metric을 한 흐름으로 정리한 로봇 파지 이론 가이드."
+date: 2026-10-04 14:21:00 -0400
+lang: ko
+permalink: /ko/posts/grasp-theory-for-robotic-grasping/
+categories:
+  - Grasping & Manipulation
+  - Robotics
+tags:
+  - grasping
+  - manipulation
+  - force-closure
+  - grasp-matrix
+  - friction-cone
+  - grasp-quality
+math: true
+---
+
+<style>
+.grasp-note{border-left:3px solid var(--link);padding:14px 18px;margin:26px 0;background:var(--surface)}
+.grasp-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px;margin:24px 0}.grasp-card{border:1px solid var(--line);border-radius:10px;padding:16px;background:var(--surface)}
+.grasp-card h4{margin:.1rem 0 .4rem}.grasp-table{overflow-x:auto;margin:22px 0}.grasp-table table{min-width:690px}.grasp-svg{width:100%;height:auto;border:1px solid var(--line);border-radius:10px;background:var(--surface);margin:20px 0}.grasp-caption{font:.82rem/1.5 var(--sans);color:var(--muted);margin-top:-10px;margin-bottom:26px}.paper-links{display:flex;flex-wrap:wrap;gap:10px;margin:18px 0 30px}.paper-links a{border:1px solid var(--line);border-radius:999px;padding:7px 12px;font:600 .84rem var(--sans)}
+@media(max-width:700px){.grasp-grid{grid-template-columns:1fr}}
+</style>
+
+<p class="eyebrow">Theory · Grasping & Manipulation</p>
+
+<div class="paper-links">
+  <a href="https://joel-baptista.github.io/phd-weekly-report/posts/grasp_theory/" target="_blank" rel="noopener">참고 원문 ↗</a>
+</div>
+
+<p>
+로봇 파지는 본질적으로 <strong>여러 접촉점으로 물체의 움직임을 구속하는 문제</strong>다. 좋은 grasp는 단순히 손가락 위치가 좋아 보이는 상태가 아니라, 각 contact가 어떤 힘과 모멘트를 전달할 수 있는지, 이 contact force들이 object wrench로 어떻게 합쳐지는지, 그리고 실제 관절 토크로 그 힘을 만들 수 있는지까지 모두 만족해야 한다.
+</p>
+
+<div class="grasp-note"><strong>핵심 흐름:</strong> contact geometry가 가능한 motion을 제한하고, friction이 가능한 contact force를 제한하며, grasp matrix가 contact force를 object wrench로 변환한다. 마지막으로 grasp-quality metric이 disturbance에 대한 여유를 하나의 수치로 요약한다.</div>
+
+<h2>1. Linear algebra 기초</h2>
+
+<p>Grasp closure 조건을 이해하려면 span, positive span, convex hull, null space, pseudoinverse가 핵심이다.</p>
+
+<p>벡터 집합 $A=\{v_1,\ldots,v_m\}$에 대해:</p>
+
+<p>\[
+\operatorname{span}(A)=\left\{\sum_i \alpha_i v_i\;\middle|\;\alpha_i\in\mathbb{R}\right\}
+\]</p>
+
+<p>\[
+\operatorname{pos}(A)=\left\{\sum_i \alpha_i v_i\;\middle|\;\alpha_i\ge0\right\}
+\]</p>
+
+<p>\[
+\operatorname{conv}(A)=\left\{\sum_i \alpha_i v_i\;\middle|\;\alpha_i\ge0,\ \sum_i\alpha_i=1\right\}.
+\]</p>
+
+<p>특히 positive span이 중요하다. 일반적인 unilateral contact는 물체를 <em>밀 수는 있지만 당길 수는 없기</em> 때문이다. 3D rigid body의 wrench는 $\mathbb{R}^6$에 존재하므로 closure는 자연스럽게 6차원 wrench space에서 정의된다.</p>
+
+<h2>2. Twist, Wrench, Contact Frame</h2>
+
+<p>물체의 선속도와 각속도를 합친 것이 twist다.</p>
+
+<p>\[
+\mathcal{V}=\begin{bmatrix}v\\\omega\end{bmatrix}\in\mathbb{R}^6
+\]</p>
+
+<p>힘과 모멘트를 합친 것이 wrench다.</p>
+
+<p>\[
+\mathcal{W}=\begin{bmatrix}f\\m\end{bmatrix}\in\mathbb{R}^6.
+\]</p>
+
+<p>각 contact에는 surface normal 방향과 두 개의 tangent 방향으로 local frame을 잡는 것이 일반적이다. friction과 contact constraint를 이 frame에서 표현하면 식이 단순해진다.</p>
+
+<svg class="grasp-svg" viewBox="0 0 1000 380" role="img" aria-label="Contact frame and friction cone">
+  <defs><marker id="gak" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto"><path d="M0,0 L0,6 L9,3 z" fill="currentColor"/></marker></defs>
+  <rect x="120" y="210" width="760" height="95" rx="16" fill="none" stroke="currentColor" stroke-opacity=".35" stroke-width="3"/>
+  <circle cx="500" cy="210" r="8" fill="var(--link)"/>
+  <g fill="none" stroke="currentColor" stroke-width="3" marker-end="url(#gak)">
+    <line x1="500" y1="210" x2="500" y2="80"/><line x1="500" y1="210" x2="670" y2="210"/>
+  </g>
+  <text x="516" y="92" fill="currentColor" font-size="24" font-family="ui-sans-serif,system-ui">normal n</text>
+  <text x="650" y="196" fill="currentColor" font-size="24" font-family="ui-sans-serif,system-ui">tangent t</text>
+  <path d="M500 90 L420 205 M500 90 L580 205" fill="none" stroke="var(--link)" stroke-width="3" stroke-dasharray="7 7"/>
+  <text x="500" y="55" text-anchor="middle" fill="currentColor" font-size="22" font-family="ui-sans-serif,system-ui">friction cone</text>
+</svg>
+<div class="grasp-caption">개념도. Friction cone은 양의 normal force에서 허용되는 tangential force의 범위를 나타낸다.</div>
+
+<h2>3. Contact kinematics: breaking, sliding, rolling</h2>
+
+<p>두 물체가 접촉할 때 서로 파고들 수 없다는 impenetrability constraint는 다음처럼 표현할 수 있다.</p>
+
+<p>\[
+\hat n^T(\dot p_A-\dot p_B)\ge0.
+\]</p>
+
+<div class="grasp-grid">
+  <div class="grasp-card"><h4>Breaking</h4><p>normal 방향 상대속도가 양수여서 두 물체가 분리되는 경우.</p></div>
+  <div class="grasp-card"><h4>Sliding</h4><p>normal 분리는 없지만 tangent 방향 상대운동이 존재하는 경우.</p></div>
+  <div class="grasp-card"><h4>Rolling / Sticking</h4><p>contact point의 상대속도가 0인 경우.</p></div>
+  <div class="grasp-card"><h4>Multiple contacts</h4><p>물체가 허용받는 twist는 모든 contact constraint를 동시에 만족해야 한다.</p></div>
+</div>
+
+<p>First-order contact analysis는 contact normal만 사용한다. 계산은 단순하지만 surface curvature를 무시하기 때문에 실제로 안정적인 grasp가 1차 분석에서는 불안정하게 보일 수 있다.</p>
+
+<h2>4. Friction cone과 Contact Model</h2>
+
+<p>Coulomb friction에서 sticking contact의 tangential force는 다음을 만족한다.</p>
+
+<p>\[
+\|f_t\|\le \mu f_n,\qquad f_n\ge0.
+\]</p>
+
+<p>따라서 가능한 contact force의 집합은 cone을 이룬다.</p>
+
+<p>\[
+\mathcal{F}=\{f\mid f_n\ge0,\ \sqrt{f_{t1}^2+f_{t2}^2}\le\mu f_n\}.
+\]</p>
+
+<p>실제 계산에서는 연속적인 cone을 여러 개의 edge vector로 근사한다. edge 수를 늘리면 실제 cone에 가까워지지만 convex hull 계산과 optimization 비용도 증가한다.</p>
+
+<div class="grasp-table"><table>
+<thead><tr><th>Contact model</th><th>전달 가능한 힘/모멘트</th><th>의미</th></tr></thead>
+<tbody>
+<tr><td>Frictionless point</td><td>Normal force</td><td>가장 단순한 point contact</td></tr>
+<tr><td>Hard finger</td><td>Normal + tangential force</td><td>Friction이 있는 point contact</td></tr>
+<tr><td>Soft finger</td><td>Force + normal-axis torsional moment</td><td>변형 가능한 fingertip/contact patch</td></tr>
+</tbody></table></div>
+
+<h2>5. Form Closure와 Force Closure</h2>
+
+<p><strong>Form closure</strong>는 friction에 의존하지 않고 contact geometry만으로 물체를 immobilize하는 개념이다. First-order form closure에서는 가능한 object twist가 $0$ 하나뿐이어야 한다.</p>
+
+<p>즉 contact wrench들의 positive span이 전체 wrench space를 덮어야 한다. 3D object는 6차원 wrench space를 가지므로 일반적인 unilateral wrench generator 관점에서는 최소 7개 이상의 generator가 필요하다는 lower bound가 나온다.</p>
+
+<p><strong>Force closure</strong>는 frictional contact force를 이용한다. 가능한 contact wrench들이 모든 방향의 external wrench를 상쇄할 수 있다면 force closure가 성립한다.</p>
+
+<div class="grasp-note"><strong>주의:</strong> $\mathcal{N}(G)\neq\varnothing$이면 internal squeezing force를 만들 수 있다는 점은 매우 중요하지만, 이것만으로 force closure가 보장되지는 않는다. $G$의 rank, unilateral contact, friction cone, 그리고 실제 actuator torque limit까지 함께 확인해야 한다.</div>
+
+<h2>6. Grasp Matrix</h2>
+
+<p>$\lambda$를 모든 contact force coordinate를 모은 벡터라고 하면 grasp matrix $G$는 이를 object wrench로 변환한다.</p>
+
+<p>\[
+\mathcal{W}=G\lambda.
+\]</p>
+
+<p>물체 기준점에서 $r_i$ 떨어진 contact에 force $f_i$가 작용할 때:</p>
+
+<p>\[
+\mathcal{W}_i=
+\begin{bmatrix}
+f_i\\r_i\times f_i
+\end{bmatrix}.
+\]</p>
+
+<p>각 contact의 mapping을 이어 붙이면 전체 $G$가 된다. Classical grasp quality metric의 대부분은 결국 $G$ 자체 또는 $G$로 생성되는 wrench set을 분석한다.</p>
+
+<svg class="grasp-svg" viewBox="0 0 1100 320" role="img" aria-label="Grasp matrix mapping">
+  <g font-family="ui-sans-serif,system-ui" fill="currentColor">
+    <rect x="60" y="100" width="240" height="110" rx="14" fill="none" stroke="currentColor" stroke-opacity=".4" stroke-width="2"/>
+    <text x="180" y="145" text-anchor="middle" font-size="24" font-weight="700">Contact forces</text><text x="180" y="180" text-anchor="middle" font-size="24">λ</text>
+    <rect x="430" y="90" width="240" height="130" rx="14" fill="none" stroke="var(--link)" stroke-width="3"/>
+    <text x="550" y="145" text-anchor="middle" font-size="25" font-weight="700">Grasp Matrix</text><text x="550" y="184" text-anchor="middle" font-size="25">G</text>
+    <rect x="800" y="100" width="240" height="110" rx="14" fill="none" stroke="currentColor" stroke-opacity=".4" stroke-width="2"/>
+    <text x="920" y="145" text-anchor="middle" font-size="24" font-weight="700">Object wrench</text><text x="920" y="180" text-anchor="middle" font-size="24">W</text>
+  </g>
+  <g stroke="currentColor" stroke-width="3" fill="none"><line x1="300" y1="155" x2="430" y2="155"/><line x1="670" y1="155" x2="800" y2="155"/></g>
+</svg>
+
+<h2>7. Hand Jacobian과 Contact Compatibility</h2>
+
+<p>Hand Jacobian은 joint velocity를 contact point의 twist로 연결한다.</p>
+
+<p>\[
+\mathcal{V}_{c,hand}=J\dot q.
+\]</p>
+
+<p>Object motion 역시 contact point velocity를 만든다.</p>
+
+<p>\[
+\mathcal{V}_{c,obj}=G^T\mathcal{V}_{obj}.
+\]</p>
+
+<p>Sticking contact에서는 두 velocity가 같아야 하므로:</p>
+
+<p>\[
+J\dot q=G^T\mathcal{V}_{obj}.
+\]</p>
+
+<p>Force side에서는 virtual work에 의해:</p>
+
+<p>\[
+\tau=J^T\lambda.
+\]</p>
+
+<p>이 식이 실제 로봇에서 중요하다. Contact-space 상으로는 가능한 force distribution이라도 joint torque limit을 넘으면 실제 hand에서는 생성할 수 없다.</p>
+
+<h2>8. Internal Force</h2>
+
+<p>External wrench $\mathcal{W}_{ext}$를 상쇄해야 한다고 하자.</p>
+
+<p>\[
+G\lambda=-\mathcal{W}_{ext}.
+\]</p>
+
+<p>Pseudoinverse를 사용하면 일반해는:</p>
+
+<p>\[
+\lambda=-G^\#\mathcal{W}_{ext}+N_G\gamma
+\]</p>
+
+<p>로 쓸 수 있다. 첫 번째 항은 external disturbance를 상쇄하기 위한 힘이고, $N_G\gamma$는 object의 net wrench를 바꾸지 않으면서 contact force만 조절하는 <strong>internal force</strong>다. 손으로 물체를 더 세게 쥐어도 물체 자체가 움직이지 않는 것이 대표적인 예다.</p>
+
+<h2>9. Grasp Wrench Space와 Ferrari-Canny $\epsilon$ Metric</h2>
+
+<p>각 friction cone을 여러 edge wrench로 discretize한 뒤 이들이 생성하는 convex set을 만들면 <strong>Grasp Wrench Space(GWS)</strong>를 얻는다.</p>
+
+<p>공통 force budget normalization을 사용할 경우:</p>
+
+<p>\[
+\mathcal{P}=\operatorname{conv}\left(\bigcup_{i,j}\mathcal{W}_{i,j}\right).
+\]</p>
+
+<p>Ferrari-Canny $\epsilon$ metric은 원점을 중심으로 GWS 내부에 완전히 들어가는 가장 큰 ball의 반지름이다.</p>
+
+<p>\[
+Q_{\epsilon}=\min_{\mathcal{W}\in\partial\mathcal{P}}\|\mathcal{W}\|.
+\]</p>
+
+<p>$Q_{\epsilon}$가 클수록 모든 방향의 worst-case disturbance에 더 강하다. Classical grasp quality 평가에서 가장 널리 사용되는 metric 중 하나인 이유다.</p>
+
+<h2>10. 다른 Grasp Quality Metrics</h2>
+
+<div class="grasp-table"><table>
+<thead><tr><th>Metric</th><th>정의</th><th>해석</th></tr></thead>
+<tbody>
+<tr><td>GWS volume</td><td>$Q_V=\operatorname{Volume}(\mathcal{P})$</td><td>전체 wrench 생성 능력</td></tr>
+<tr><td>Minimum singular value</td><td>$\sigma_{min}(G)$</td><td>가장 약한 linear wrench direction</td></tr>
+<tr><td>Wrench ellipsoid volume</td><td>$\sqrt{\det(GG^T)}$</td><td>전체 linearized capability</td></tr>
+<tr><td>Isotropy</td><td>$\sigma_{min}(G)/\sigma_{max}(G)$</td><td>방향별 균형</td></tr>
+<tr><td>Contact centroid-COM distance</td><td>$\|c_{contact}-c_{COM}\|$</td><td>중력/관성 disturbance에 대한 휴리스틱</td></tr>
+</tbody></table></div>
+
+<p>Singular-value 기반 metric은 유용하지만 unilateral contact나 friction cone을 직접 포함하지 않는다. 따라서 force closure 자체를 판정하는 metric이라기보다는 local algebraic quality indicator로 보는 것이 안전하다.</p>
+
+<h2>11. Precision Grasp와 Power Grasp</h2>
+
+<div class="grasp-grid">
+<div class="grasp-card"><h4>Precision grasp</h4><p>주로 fingertip contact를 사용한다. Contact 수는 적지만 dexterity가 높아 in-hand manipulation에 적합하다.</p></div>
+<div class="grasp-card"><h4>Power grasp</h4><p>Finger link와 palm까지 넓게 접촉한다. Robustness는 높지만 contact modeling과 force distribution이 더 복잡해진다.</p></div>
+</div>
+
+<h2>12. 실제 Grasp 평가 절차</h2>
+
+<ol>
+<li>Object frame과 contact frame을 정의한다.</li>
+<li>Contact model을 선택한다: frictionless / hard finger / soft finger.</li>
+<li>Friction coefficient를 설정하고 friction cone을 discretize한다.</li>
+<li>Grasp matrix $G$를 구성한다.</li>
+<li>Wrench-space rank와 force-closure feasibility를 확인한다.</li>
+<li>실제 실행 가능성이 중요하면 $\tau=J^T\lambda$를 이용해 actuator limit도 포함한다.</li>
+<li>GWS를 구성하고 $Q_{\epsilon}$을 계산한다.</li>
+<li>GWS volume, isotropy, COM distance 등의 보조 metric으로 task-specific ranking을 한다.</li>
+</ol>
+
+<h2>핵심 정리</h2>
+
+<ul>
+<li><strong>Geometry</strong>: contact가 어떤 motion을 막는지 결정한다.</li>
+<li><strong>Friction</strong>: 어떤 contact force가 실제로 가능한지 결정한다.</li>
+<li><strong>Grasp Matrix</strong>: local contact force를 global object wrench로 변환한다.</li>
+<li><strong>Hand Jacobian</strong>: contact motion/force와 robot joint를 연결한다.</li>
+<li><strong>Force Closure</strong>: robust grasp가 가능한지를 판단하는 핵심 조건이다.</li>
+<li><strong>Ferrari-Canny $\epsilon$ metric</strong>: 하나의 scalar로 grasp robustness를 비교할 때 매우 유용하다.</li>
+</ul>
+
+<h2>References</h2>
+
+<ol>
+<li>Joel Baptista, <a href="https://joel-baptista.github.io/phd-weekly-report/posts/grasp_theory/" target="_blank" rel="noopener">“Grasping Theory,” Joel's PhD Blog</a>. 본 글의 주요 구성과 이론 흐름을 정리할 때 참고한 원문.</li>
+<li>Kevin M. Lynch and Frank C. Park, <em>Modern Robotics</em>, Chapter 12: Grasping and Manipulation.</li>
+<li>Máximo A. Roa and Raúl Suárez, “Grasp Quality Measures: Review and Performance,” <em>Autonomous Robots</em>, 2015.</li>
+<li>C. Ferrari and J. Canny, “Planning Optimal Grasps,” IEEE ICRA, 1992.</li>
+<li>Andrew T. Miller and Peter K. Allen, “GraspIt!: A Versatile Simulator for Grasp Analysis,” 2000.</li>
+</ol>
