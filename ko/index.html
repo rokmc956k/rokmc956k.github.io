@@ -1,0 +1,38 @@
+---
+layout: default
+title: 홈
+lang: ko
+permalink: /ko/
+---
+<section class="hero">
+  <p class="eyebrow">Robotics / Physical AI</p>
+  <h1>S. Lee</h1>
+  <p class="role">Robotics / Physical AI Engineer</p>
+  <p class="intro">로봇 학습, Vision-Language-Action 모델, 강화학습, 휴머노이드 로보틱스, 조작, sim-to-real을 중심으로 연구하고 정리합니다.</p>
+  <p class="hero-links"><a href="https://github.com/rokmc956k">GitHub</a><span>·</span><a href="#posts">글</a></p>
+</section>
+
+<section id="posts" class="posts-section">
+  <div class="section-heading">
+    <h2>글</h2>
+    <span>한국어 글</span>
+  </div>
+
+  <div class="post-list">
+    {% assign has_korean = false %}
+    {% for post in site.posts %}
+      {% if post.lang == 'ko' %}
+        {% assign has_korean = true %}
+        <article class="post-row">
+          <time datetime="{{ post.date | date_to_xmlschema }}">{{ post.date | date: "%Y.%m.%d" }}</time>
+          <div class="post-copy">
+            <h3><a href="{{ post.url | relative_url }}">{{ post.title }}</a></h3>
+            <p>{{ post.description | default: post.excerpt | strip_html | truncate: 180 }}</p>
+            <a class="read-more" href="{{ post.url | relative_url }}">계속 읽기 »</a>
+          </div>
+        </article>
+      {% endif %}
+    {% endfor %}
+    {% unless has_korean %}<p class="empty-state">아직 글이 없습니다.</p>{% endunless %}
+  </div>
+</section>
