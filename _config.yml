@@ -1,0 +1,10 @@
+title: S. Lee
+description: Robotics / Physical AI Engineer
+url: https://rokmc956k.github.io
+baseurl: ""
+markdown: kramdown
+permalink: /posts/:title/
+future: false
+
+exclude:
+  - README.md
