@@ -7,18 +7,20 @@ permalink: /ko/
 <section class="hero">
   <p class="eyebrow">Robotics / Physical AI</p>
   <h1>S. Lee</h1>
+  <!--
   <p class="role">Robotics / Physical AI Engineer</p>
   <p class="intro">로봇 학습, Vision-Language-Action 모델, 강화학습, 휴머노이드 로보틱스, 조작, sim-to-real을 중심으로 연구하고 정리합니다.</p>
+  -->
   <p class="hero-links"><a href="https://github.com/rokmc956k">GitHub</a><span>·</span><a href="#posts">글</a></p>
 </section>
 
-<section id="posts" class="posts-section">
-  <div class="section-heading">
-    <h2>글</h2>
-    <span>한국어 글</span>
-  </div>
+<details id="posts" class="posts-section posts-disclosure" open>
+  <summary class="posts-summary">
+    <span class="posts-summary-title">글</span>
+    <span class="posts-summary-meta">한국어 글</span>
+  </summary>
 
-  <div class="post-list">
+  <div class="post-list posts-collapsible-content">
     {% assign has_korean = false %}
     {% for post in site.posts %}
       {% if post.lang == 'ko' %}
@@ -35,4 +37,4 @@ permalink: /ko/
     {% endfor %}
     {% unless has_korean %}<p class="empty-state">아직 글이 없습니다.</p>{% endunless %}
   </div>
-</section>
+</details>
