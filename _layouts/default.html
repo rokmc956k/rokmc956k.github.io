@@ -21,7 +21,20 @@
 <body>
   <header class="site-header">
     <div class="wrap header-inner">
-      <a class="brand" href="{% if page_lang == 'ko' %}{{ '/ko/' | relative_url }}{% else %}{{ '/' | relative_url }}{% endif %}">S. Lee</a>
+      <div class="header-left">
+        <details class="site-menu">
+          <summary class="menu-button" aria-label="Open navigation menu" title="Menu">
+            <span></span><span></span><span></span>
+          </summary>
+          <nav class="menu-panel" aria-label="Primary navigation">
+            <a href="{% if page_lang == 'ko' %}{{ '/ko/' | relative_url }}{% else %}{{ '/' | relative_url }}{% endif %}">{% if page_lang == 'ko' %}홈{% else %}Home{% endif %}</a>
+            <a href="{% if page_lang == 'ko' %}{{ '/ko/' | relative_url }}#posts{% else %}{{ '/' | relative_url }}#posts{% endif %}">{% if page_lang == 'ko' %}글{% else %}Posts{% endif %}</a>
+            <a href="https://github.com/rokmc956k" target="_blank" rel="noopener">GitHub ↗</a>
+          </nav>
+        </details>
+        <a class="brand" href="{% if page_lang == 'ko' %}{{ '/ko/' | relative_url }}{% else %}{{ '/' | relative_url }}{% endif %}">S. Lee</a>
+      </div>
+
       <div class="header-actions">
         <a class="nav-link" href="{% if page_lang == 'ko' %}{{ '/ko/' | relative_url }}#posts{% else %}{{ '/' | relative_url }}#posts{% endif %}">{% if page_lang == 'ko' %}글{% else %}Posts{% endif %}</a>
 
